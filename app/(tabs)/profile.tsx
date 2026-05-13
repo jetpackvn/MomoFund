@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/hooks/useAuth';
 import { colors, spacing, radius, fontSize } from '@/constants/theme';
@@ -7,10 +7,17 @@ export default function ProfileScreen() {
   const { user, logout } = useAuth();
 
   const handleLogout = () => {
-    Alert.alert('Đăng xuất', 'Bạn chắc chắn muốn đăng xuất?', [
-      { text: 'Huỷ', style: 'cancel' },
-      { text: 'Đăng xuất', style: 'destructive', onPress: logout },
-    ]);
+    // Alert.alert không hoạt động trên web — dùng window.confirm thay thế
+    if (Platform.OS === 'web') {
+      if (window.confirm('Bạn chắc chắn muốn đăng xuất?')) {
+        logout();
+      }
+    } else {
+      Alert.alert('Đăng xuất', 'Bạn chắc chắn muốn đăng xuất?', [
+        { text: 'Huỷ', style: 'cancel' },
+        { text: 'Đăng xuất', style: 'destructive', onPress: logout },
+      ]);
+    }
   };
 
   const initial = user?.displayName?.charAt(0).toUpperCase() || '?';

@@ -47,9 +47,9 @@ export default function HomeScreen() {
     if (!user) return;
     try {
       const data = await fundService.getUserFunds(user.uid);
-      // Gắn role vào fund để hiển thị
-      const withRole = data.map(f => ({ ...f, role: f.ownerId === user.uid ? 'owner' : 'member' }));
-      setFunds(withRole as any);
+      // Gắn role vào fund để hiển thị (virtual field, không lưu Firestore)
+      const withRole = data.map(f => ({ ...f, role: f.ownerId === user.uid ? 'owner' as const : 'member' as const }));
+      setFunds(withRole);
     } catch (e) {
       Alert.alert('Lỗi', 'Không thể tải danh sách quỹ');
     }
