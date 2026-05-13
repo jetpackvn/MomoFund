@@ -1,11 +1,11 @@
-# PROJECT CHARTER
+# ĐIỀU LỆ DỰ ÁN (PROJECT CHARTER)
 ## MomoFund – Ứng dụng Quản lý Quỹ Nhóm
 
 ---
 
-**Project Title:** MomoFund – Ứng dụng quản lý quỹ nhóm trên nền tảng di động
+**Tên dự án (Project Title):** MomoFund – Ứng dụng quản lý quỹ nhóm trên nền tảng di động
 
-**Project Start Date:** 18/02/2025 — **Projected Finish Date:** 13/06/2025
+**Ngày bắt đầu (Project Start Date):** 18/02/2025 — **Ngày kết thúc (Projected Finish Date):** 13/06/2025
 
 **Scrum Master:** Lê Thành Hiệu
 
@@ -13,7 +13,7 @@
 
 ---
 
-**Project Objectives:**
+**Mục tiêu dự án (Project Objectives):**
 Xây dựng ứng dụng mobile cho phép nhiều người dùng cùng tạo và quản lý quỹ chung theo thời gian thực. Hệ thống hỗ trợ đóng góp tiền, theo dõi số dư, quản lý giao dịch và duyệt yêu cầu rút tiền — hướng tới mô hình quản lý quỹ cộng tác minh bạch, đơn giản và realtime.
 
 ---
@@ -23,7 +23,7 @@ Mô hình quỹ nhóm hiện tại (quỹ lớp, quỹ du lịch, quỹ đồ á
 
 ---
 
-**Approach:**
+**Cách tiếp cận (Approach):**
 - Áp dụng mô hình Agile/Scrum với tối thiểu 3 Sprints, mỗi Sprint 2 tuần
 - Sử dụng React Native + Expo Go cho Mobile App; Firebase Firestore + Authentication cho Backend
 - Sử dụng Notion làm công cụ quản lý dự án (Backlog, Kanban, Meeting Log)
@@ -32,7 +32,7 @@ Mô hình quỹ nhóm hiện tại (quỹ lớp, quỹ du lịch, quỹ đồ á
 
 ---
 
-**Milestones:**
+**Các cột mốc quan trọng (Milestones):**
 
 | Cột mốc | Mô tả | Thời hạn |
 |---|---|---|
@@ -44,7 +44,7 @@ Mô hình quỹ nhóm hiện tại (quỹ lớp, quỹ du lịch, quỹ đồ á
 
 ---
 
-**Roles and Responsibilities:**
+**Vai trò và Trách nhiệm (Roles and Responsibilities):**
 
 | Tên | Vai trò | Trách nhiệm |
 |---|---|---|
@@ -55,7 +55,7 @@ Mô hình quỹ nhóm hiện tại (quỹ lớp, quỹ du lịch, quỹ đồ á
 
 ---
 
-**Sign-off:**
+**Ký tên (Sign-off):**
 
 | Tên | Vai trò | Chữ ký |
 |---|---|---|
@@ -66,10 +66,6 @@ Mô hình quỹ nhóm hiện tại (quỹ lớp, quỹ du lịch, quỹ đồ á
 
 ---
 
-**Comments:**
+**Chú thích (Comments):**
 
 > *"Ứng dụng cần demo được đầy đủ scenario cốt lõi: tạo quỹ → tham gia → đóng góp → xem số dư realtime → duyệt rút tiền. Các phần nghiên cứu mở rộng (workflow đóng quỹ, ủy quyền) là phần cộng thêm, không bắt buộc implement hoàn chỉnh."* — Trần Hoàng Huy, Product Owner
-
----
-
-*Version 1.0 | Created: 18/02/2025*
