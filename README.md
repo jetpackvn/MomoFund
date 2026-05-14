@@ -6,6 +6,8 @@
 
 # **MomoFund – Ứng dụng quản lý quỹ nhóm trên nền tảng di động**
 
+> **Lưu ý dành cho Developer:** Vui lòng đọc kỹ [Hướng dẫn Phát triển & Chuẩn Coding (DEVELOPMENT_GUIDELINES.md)](./DEVELOPMENT_GUIDELINES.md) trước khi bắt đầu code để đảm bảo sự đồng bộ trong toàn bộ dự án.
+
 ---
 
 ## 1.2 Mô tả đề tài
