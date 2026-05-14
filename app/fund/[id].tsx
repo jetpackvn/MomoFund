@@ -1,3 +1,4 @@
+import { Loading } from '@/components/common/Loading';
 import Button from '@/components/ui/Button';
 import TransactionItem from '@/components/ui/TransactionItem';
 import { colors, fontSize, radius, spacing } from '@/constants/theme';
