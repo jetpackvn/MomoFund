@@ -1,8 +1,46 @@
+import { useEffect } from 'react';
+import { Platform } from 'react-native';
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import * as Notifications from 'expo-notifications';
+import * as Device from 'expo-device';
 import { colors } from '@/constants/theme';
+import { useNotifications } from '@/hooks/useNotifications';
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: true,
+  }),
+});
 
 export default function TabsLayout() {
+  const { unreadCount } = useNotifications();
+
+  useEffect(() => {
+    async function registerForPushNotificationsAsync() {
+      if (Platform.OS === 'web') return;
+
+      if (Device.isDevice) {
+        const { status: existingStatus } = await Notifications.getPermissionsAsync();
+        let finalStatus = existingStatus;
+        if (existingStatus !== 'granted') {
+          const { status } = await Notifications.requestPermissionsAsync();
+          finalStatus = status;
+        }
+        if (finalStatus !== 'granted') {
+          console.log('Failed to get push token for push notification!');
+          return;
+        }
+        // In production, you would send this token to Firebase/your server
+        // const token = (await Notifications.getExpoPushTokenAsync()).data;
+      }
+    }
+
+    registerForPushNotificationsAsync();
+  }, []);
+
   return (
     <Tabs
       screenOptions={{
@@ -19,6 +57,15 @@ export default function TabsLayout() {
         options={{
           title: 'Quỹ của tôi',
           tabBarIcon: ({ color, size }) => <Ionicons name="wallet-outline" size={size} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="notifications"
+        options={{
+          title: 'Thông báo',
+          tabBarIcon: ({ color, size }) => <Ionicons name="notifications-outline" size={size} color={color} />,
+          tabBarBadge: unreadCount > 0 ? unreadCount : undefined,
+          tabBarBadgeStyle: { backgroundColor: colors.error, color: '#fff' }
         }}
       />
       <Tabs.Screen

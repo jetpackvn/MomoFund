@@ -1,8 +1,9 @@
 import { useEffect } from 'react';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { useAuth } from '@/hooks/useAuth';
-import { View, ActivityIndicator } from 'react-native';
+import { View } from 'react-native';
 import { colors } from '@/constants/theme';
+import { Loading } from '@/components/common/Loading';
 
 export default function RootLayout() {
   const { user, loading } = useAuth();
@@ -20,11 +21,7 @@ export default function RootLayout() {
   }, [user, loading, segments]);
 
   if (loading) {
-    return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background }}>
-        <ActivityIndicator size="large" color={colors.primary} />
-      </View>
-    );
+    return <Loading fullScreen />;
   }
 
   return (

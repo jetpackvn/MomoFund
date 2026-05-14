@@ -7,6 +7,8 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/hooks/useAuth';
 import { fundService } from '@/services/fundService';
+import { Loading } from '@/components/common/Loading';
+import { EmptyState } from '@/components/common/EmptyState';
 import { Fund } from '@/types';
 import { colors, spacing, radius, fontSize } from '@/constants/theme';
 
@@ -66,7 +68,7 @@ export default function HomeScreen() {
   };
 
   if (loading) {
-    return <View style={styles.center}><ActivityIndicator size="large" color={colors.primary} /></View>;
+    return <Loading fullScreen />;
   }
 
   return (
@@ -104,11 +106,11 @@ export default function HomeScreen() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
         contentContainerStyle={funds.length === 0 ? styles.emptyContainer : styles.list}
         ListEmptyComponent={
-          <View style={styles.empty}>
-            <Ionicons name="wallet-outline" size={64} color={colors.border} />
-            <Text style={styles.emptyTitle}>Chưa có quỹ nào</Text>
-            <Text style={styles.emptySub}>Tạo quỹ mới hoặc tham gia bằng mã code</Text>
-          </View>
+          <EmptyState 
+            iconName="wallet-outline"
+            title="Chưa có quỹ nào"
+            description="Tạo quỹ mới hoặc tham gia bằng mã code do bạn bè chia sẻ."
+          />
         }
       />
     </View>
@@ -139,9 +141,6 @@ const styles = StyleSheet.create({
   actionText: { fontSize: fontSize.sm, fontWeight: '600', color: colors.primary },
   list: { padding: spacing.md, gap: spacing.sm },
   emptyContainer: { flex: 1 },
-  empty: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingTop: 80, gap: spacing.sm },
-  emptyTitle: { fontSize: fontSize.lg, fontWeight: '700', color: colors.text },
-  emptySub: { fontSize: fontSize.sm, color: colors.textSecondary, textAlign: 'center', paddingHorizontal: spacing.xl },
   card: {
     backgroundColor: colors.surface, borderRadius: radius.lg, padding: spacing.md,
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2,

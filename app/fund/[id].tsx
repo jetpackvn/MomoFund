@@ -121,7 +121,7 @@ export default function FundDetailScreen() {
   };
 
   if (fundLoading) {
-    return <View style={styles.center}><ActivityIndicator size="large" color={colors.primary} /></View>;
+    return <Loading fullScreen />;
   }
 
   if (error || !fund) {
