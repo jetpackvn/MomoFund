@@ -1,33 +1,122 @@
-import { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, FlatList, Alert } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import Button from '@/components/ui/Button';
+import TransactionItem from '@/components/ui/TransactionItem';
+import { colors, fontSize, radius, spacing } from '@/constants/theme';
+import { useAuth } from '@/hooks/useAuth';
 import { useFund } from '@/hooks/useFund';
 import { memberService } from '@/services/memberService';
-import { FundMember } from '@/types';
-import { colors, fontSize, spacing, radius } from '@/constants/theme';
+import { transactionService } from '@/services/transactionService';
+import { FundMember, Transaction, WithdrawRequest } from '@/types';
+import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
 import * as Clipboard from 'expo-clipboard';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useCallback, useEffect, useState } from 'react';
+import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function FundDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const { user } = useAuth();
   const { fund, loading: fundLoading, error } = useFund(id);
   const [members, setMembers] = useState<FundMember[]>([]);
   const [membersLoading, setMembersLoading] = useState(true);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [requests, setRequests] = useState<WithdrawRequest[]>([]);
+  const [loadingTransactions, setLoadingTransactions] = useState(true);
+  const [loadingRequests, setLoadingRequests] = useState(true);
+  const [processingRequestId, setProcessingRequestId] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (id) {
-      memberService.getFundMembers(id)
-        .then(setMembers)
-        .catch(console.error)
-        .finally(() => setMembersLoading(false));
+  const loadMembers = useCallback(() => {
+    if (!id) return;
+    setMembersLoading(true);
+    memberService.getFundMembers(id)
+      .then(setMembers)
+      .catch(console.error)
+      .finally(() => setMembersLoading(false));
+  }, [id]);
+
+  const loadTransactions = useCallback(async () => {
+    if (!id) return;
+    setLoadingTransactions(true);
+    try {
+      const data = await transactionService.getTransactions(id);
+      setTransactions(data);
+    } catch (err) {
+      console.error('loadTransactions', err);
+      Alert.alert('Lỗi', 'Không thể tải lịch sử giao dịch');
+    } finally {
+      setLoadingTransactions(false);
     }
   }, [id]);
+
+  const loadRequests = useCallback(async () => {
+    if (!id) return;
+    setLoadingRequests(true);
+    try {
+      const data = await transactionService.getPendingWithdrawRequests(id);
+      setRequests(data);
+    } catch (err) {
+      console.error('loadRequests', err);
+      Alert.alert('Lỗi', 'Không thể tải yêu cầu rút tiền');
+    } finally {
+      setLoadingRequests(false);
+    }
+  }, [id]);
+
+  useEffect(() => {
+    loadMembers();
+  }, [loadMembers]);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadTransactions();
+      loadRequests();
+    }, [loadTransactions, loadRequests])
+  );
 
   const handleCopyCode = async () => {
     if (fund?.code) {
       await Clipboard.setStringAsync(fund.code);
       Alert.alert('Thành công', 'Đã sao chép mã quỹ');
+    }
+  };
+
+  const handleApprove = async (requestId: string) => {
+    if (!user) {
+      Alert.alert('Lỗi', 'Bạn cần đăng nhập để duyệt yêu cầu');
+      return;
+    }
+
+    setProcessingRequestId(requestId);
+    try {
+      await transactionService.approveWithdrawRequest(requestId, user.uid);
+      await loadRequests();
+      await loadTransactions();
+      Alert.alert('Đã duyệt', 'Yêu cầu rút tiền đã được chấp nhận');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Có lỗi xảy ra';
+      Alert.alert('Lỗi', message);
+    } finally {
+      setProcessingRequestId(null);
+    }
+  };
+
+  const handleReject = async (requestId: string) => {
+    if (!user) {
+      Alert.alert('Lỗi', 'Bạn cần đăng nhập để duyệt yêu cầu');
+      return;
+    }
+
+    setProcessingRequestId(requestId);
+    try {
+      await transactionService.rejectWithdrawRequest(requestId, user.uid);
+      await loadRequests();
+      Alert.alert('Đã từ chối', 'Yêu cầu rút tiền đã bị từ chối');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Có lỗi xảy ra';
+      Alert.alert('Lỗi', message);
+    } finally {
+      setProcessingRequestId(null);
     }
   };
 
@@ -46,9 +135,10 @@ export default function FundDetailScreen() {
     );
   }
 
+  const isOwner = user?.uid === fund.ownerId;
+
   return (
     <View style={styles.container}>
-      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={24} color="#fff" />
@@ -59,31 +149,30 @@ export default function FundDetailScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Balance Card */}
-      <View style={styles.balanceCard}>
-        <Text style={styles.balanceLabel}>Số dư quỹ</Text>
-        <Text style={styles.balance}>{fund.balance?.toLocaleString('vi-VN')} ₫</Text>
-        <TouchableOpacity style={styles.codeBadge} onPress={handleCopyCode}>
-          <Ionicons name="copy-outline" size={16} color={colors.primary} />
-          <Text style={styles.codeText}>Mã: {fund.code}</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Members Section */}
-      <View style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Thành viên ({fund.memberCount})</Text>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <View style={styles.balanceCard}>
+          <Text style={styles.balanceLabel}>Số dư quỹ</Text>
+          <Text style={styles.balance}>{fund.balance?.toLocaleString('vi-VN')} ₫</Text>
+          <TouchableOpacity style={styles.codeBadge} onPress={handleCopyCode}>
+            <Ionicons name="copy-outline" size={16} color={colors.primary} />
+            <Text style={styles.codeText}>Mã: {fund.code}</Text>
+          </TouchableOpacity>
         </View>
-        
-        {membersLoading ? (
-          <ActivityIndicator color={colors.primary} style={{ marginTop: spacing.md }} />
-        ) : (
-          <FlatList
-            data={members}
-            keyExtractor={item => item.userId}
-            scrollEnabled={false}
-            renderItem={({ item }) => (
-              <View style={styles.memberRow}>
+
+        <View style={styles.actionsRow}>
+          <Button label="Đóng góp" onPress={() => router.push(`/transaction/contribute?fundId=${id}`)} fullWidth={false} style={styles.actionButton} />
+          <Button label="Rút tiền" variant="outline" onPress={() => router.push(`/transaction/withdraw?fundId=${id}`)} fullWidth={false} style={styles.actionButton} />
+        </View>
+
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Thành viên ({fund.memberCount})</Text>
+          </View>
+          {membersLoading ? (
+            <ActivityIndicator color={colors.primary} style={{ marginTop: spacing.md }} />
+          ) : (
+            members.map((item) => (
+              <View key={item.userId} style={styles.memberRow}>
                 <View style={styles.avatar}>
                   <Text style={styles.avatarText}>{item.displayName?.charAt(0).toUpperCase() || 'U'}</Text>
                 </View>
@@ -92,22 +181,70 @@ export default function FundDetailScreen() {
                   <Text style={styles.memberRole}>{item.role === 'owner' ? 'Trưởng quỹ' : 'Thành viên'}</Text>
                 </View>
               </View>
+            ))
+          )}
+        </View>
+
+        {isOwner && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Yêu cầu rút tiền</Text>
+              <Text style={styles.sectionSub}>{requests.length} đang chờ</Text>
+            </View>
+            {loadingRequests ? (
+              <ActivityIndicator color={colors.primary} style={{ marginTop: spacing.md }} />
+            ) : requests.length > 0 ? (
+              requests.map((request) => (
+                <View key={request.id} style={styles.requestCard}>
+                  <View style={styles.requestTop}>
+                    <Text style={styles.requestTitle}>{request.requesterName}</Text>
+                    <Text style={styles.requestAmount}>{request.amount.toLocaleString('vi-VN')} ₫</Text>
+                  </View>
+                  <Text style={styles.requestNote}>{request.reason}</Text>
+                  <View style={styles.requestFooter}>
+                    <Button
+                      label="Duyệt"
+                      onPress={() => handleApprove(request.id)}
+                      loading={processingRequestId === request.id}
+                      fullWidth={false}
+                      style={styles.requestButton}
+                    />
+                    <Button
+                      label="Từ chối"
+                      variant="danger"
+                      onPress={() => handleReject(request.id)}
+                      loading={processingRequestId === request.id}
+                      fullWidth={false}
+                      style={styles.requestButton}
+                    />
+                  </View>
+                </View>
+              ))
+            ) : (
+              <View style={styles.emptyHistory}>
+                <Text style={styles.emptyText}>Không có yêu cầu rút tiền đang chờ</Text>
+              </View>
             )}
-          />
+          </View>
         )}
-      </View>
 
-      {/* History Placeholder Section */}
-      <View style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Lịch sử giao dịch</Text>
-        </View>
-        <View style={styles.emptyHistory}>
-          <Ionicons name="receipt-outline" size={48} color={colors.border} />
-          <Text style={styles.emptyText}>Chưa có giao dịch nào</Text>
-        </View>
-      </View>
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Lịch sử giao dịch</Text>
+          </View>
 
+          {loadingTransactions ? (
+            <ActivityIndicator color={colors.primary} style={{ marginTop: spacing.md }} />
+          ) : transactions.length > 0 ? (
+            transactions.map((item) => <TransactionItem key={item.id} transaction={item} />)
+          ) : (
+            <View style={styles.emptyHistory}>
+              <Ionicons name="receipt-outline" size={48} color={colors.border} />
+              <Text style={styles.emptyText}>Chưa có giao dịch nào</Text>
+            </View>
+          )}
+        </View>
+      </ScrollView>
     </View>
   );
 }
@@ -118,7 +255,7 @@ const styles = StyleSheet.create({
   errorText: { fontSize: fontSize.md, color: colors.error, marginBottom: spacing.md },
   backBtnError: { padding: spacing.md, backgroundColor: colors.surface, borderRadius: radius.md },
   backBtnText: { color: colors.primary, fontWeight: '600' },
-  
+
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     padding: spacing.md, paddingTop: spacing.xl,
@@ -128,13 +265,16 @@ const styles = StyleSheet.create({
   settingBtn: { width: 40, height: 40, justifyContent: 'center', alignItems: 'flex-end' },
   headerTitle: { flex: 1, fontSize: fontSize.lg, fontWeight: '700', color: '#fff', textAlign: 'center' },
   
+  scrollContent: { paddingBottom: spacing.xl },
   balanceCard: {
     backgroundColor: colors.primary,
     padding: spacing.xl,
     alignItems: 'center',
-    borderBottomLeftRadius: radius.xl,
-    borderBottomRightRadius: radius.xl,
+    borderBottomLeftRadius: radius.lg,
+    borderBottomRightRadius: radius.lg,
     shadowColor: colors.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 8, elevation: 4,
+    marginBottom: spacing.md,
+    marginHorizontal: spacing.md,
   },
   balanceLabel: { fontSize: fontSize.sm, color: 'rgba(255,255,255,0.8)', marginBottom: spacing.xs },
   balance: { fontSize: 36, fontWeight: '800', color: '#fff', marginBottom: spacing.md },
@@ -144,15 +284,19 @@ const styles = StyleSheet.create({
   },
   codeText: { fontSize: fontSize.sm, fontWeight: '700', color: colors.primary },
 
+  actionsRow: { flexDirection: 'row', justifyContent: 'space-between', gap: spacing.sm, marginHorizontal: spacing.md },
+  actionButton: { flex: 1 },
+
   section: {
     backgroundColor: colors.surface,
-    marginTop: spacing.md,
+    marginHorizontal: spacing.md,
+    marginBottom: spacing.md,
     padding: spacing.md,
     borderRadius: radius.lg,
-    marginHorizontal: spacing.md,
   },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.md },
   sectionTitle: { fontSize: fontSize.md, fontWeight: '700', color: colors.text },
+  sectionSub: { fontSize: fontSize.xs, color: colors.textSecondary },
   
   memberRow: { flexDirection: 'row', alignItems: 'center', marginBottom: spacing.md },
   avatar: {
@@ -164,6 +308,14 @@ const styles = StyleSheet.create({
   memberName: { fontSize: fontSize.sm, fontWeight: '600', color: colors.text },
   memberRole: { fontSize: fontSize.xs, color: colors.textSecondary, marginTop: 2 },
 
+  requestCard: { backgroundColor: '#F7FDF6', borderRadius: radius.md, padding: spacing.md, marginBottom: spacing.sm },
+  requestTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.sm },
+  requestTitle: { fontSize: fontSize.sm, fontWeight: '700', color: colors.text },
+  requestAmount: { fontSize: fontSize.sm, fontWeight: '700', color: colors.primary },
+  requestNote: { fontSize: fontSize.sm, color: colors.textSecondary, marginBottom: spacing.sm },
+  requestFooter: { flexDirection: 'row', justifyContent: 'space-between', gap: spacing.sm },
+  requestButton: { flex: 1 },
+
   emptyHistory: { alignItems: 'center', paddingVertical: spacing.xl, opacity: 0.6 },
-  emptyText: { fontSize: fontSize.sm, color: colors.textSecondary, marginTop: spacing.sm }
+  emptyText: { fontSize: fontSize.sm, color: colors.textSecondary, marginTop: spacing.sm },
 });
