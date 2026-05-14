@@ -4,6 +4,8 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useFund } from '@/hooks/useFund';
 import { memberService } from '@/services/memberService';
+import { Loading } from '@/components/common/Loading';
+import { EmptyState } from '@/components/common/EmptyState';
 import { FundMember } from '@/types';
 import { colors, fontSize, spacing, radius } from '@/constants/theme';
 import * as Clipboard from 'expo-clipboard';
@@ -32,7 +34,7 @@ export default function FundDetailScreen() {
   };
 
   if (fundLoading) {
-    return <View style={styles.center}><ActivityIndicator size="large" color={colors.primary} /></View>;
+    return <Loading fullScreen />;
   }
 
   if (error || !fund) {
@@ -102,10 +104,11 @@ export default function FundDetailScreen() {
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Lịch sử giao dịch</Text>
         </View>
-        <View style={styles.emptyHistory}>
-          <Ionicons name="receipt-outline" size={48} color={colors.border} />
-          <Text style={styles.emptyText}>Chưa có giao dịch nào</Text>
-        </View>
+        <EmptyState 
+          iconName="receipt-outline" 
+          title="Chưa có giao dịch" 
+          style={{ paddingVertical: spacing.md }}
+        />
       </View>
 
     </View>
@@ -162,8 +165,5 @@ const styles = StyleSheet.create({
   avatarText: { fontSize: fontSize.md, fontWeight: '700', color: colors.primaryDark },
   memberInfo: { flex: 1 },
   memberName: { fontSize: fontSize.sm, fontWeight: '600', color: colors.text },
-  memberRole: { fontSize: fontSize.xs, color: colors.textSecondary, marginTop: 2 },
-
-  emptyHistory: { alignItems: 'center', paddingVertical: spacing.xl, opacity: 0.6 },
-  emptyText: { fontSize: fontSize.sm, color: colors.textSecondary, marginTop: spacing.sm }
+  memberRole: { fontSize: fontSize.xs, color: colors.textSecondary, marginTop: 2 }
 });
