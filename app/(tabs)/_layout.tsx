@@ -12,6 +12,9 @@ Notifications.setNotificationHandler({
     shouldShowAlert: true,
     shouldPlaySound: true,
     shouldSetBadge: true,
+    // New properties required by NotificationBehavior
+    shouldShowBanner: true,
+    shouldShowList: true,
   }),
 });
 
@@ -63,6 +66,7 @@ export default function TabsLayout() {
         name="notifications"
         options={{
           title: 'Thông báo',
+          headerShown: false,
           tabBarIcon: ({ color, size }) => <Ionicons name="notifications-outline" size={size} color={color} />,
           tabBarBadge: unreadCount > 0 ? unreadCount : undefined,
           tabBarBadgeStyle: { backgroundColor: colors.error, color: '#fff' }
