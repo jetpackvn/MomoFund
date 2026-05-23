@@ -38,6 +38,7 @@ export const COLLECTIONS = {
   FUND_MEMBERS: 'fundMembers',   // {fundId, userId, role, joinedAt}
   TRANSACTIONS: 'transactions',
   WITHDRAW_REQUESTS: 'withdrawRequests',
+  JOIN_REQUESTS: 'joinRequests',
   NOTIFICATIONS: 'notifications',
 } as const;
 

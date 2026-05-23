@@ -69,8 +69,8 @@ export default function WithdrawScreen() {
   return (
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <View style={styles.card}>
-        <Text style={styles.title}>Yêu cầu rút tiền</Text>
-        <Text style={styles.description}>Gửi yêu cầu rút tiền để chủ quỹ kiểm tra và duyệt.</Text>
+        <Text style={styles.title}>{title}</Text>
+        <Text style={styles.description}>{description}</Text>
 
         <Input
           label="Số tiền (₫)"

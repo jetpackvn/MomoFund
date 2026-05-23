@@ -71,6 +71,16 @@ export interface WithdrawRequest {
   createdAt: Timestamp | Date;
 }
 
+// ─── JoinRequest ────────────────────────────────────────────────────────────────
+export interface JoinRequest {
+  id: string;
+  fundId: string;
+  userId: string;
+  userName: string;
+  status: 'pending' | 'approved' | 'rejected';
+  createdAt: Timestamp | Date;
+}
+
 // ─── Notification ─────────────────────────────────────────────────────────────
 
 export interface Notification {

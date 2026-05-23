@@ -1,16 +1,20 @@
 export const colors = {
-    primary: '#00C853',       // Xanh lá chính
-    primaryDark: '#009624',
-    primaryLight: '#5EFC82',
+    primary: '#A50064',       // MoMo Pink Đậm
+    primaryDark: '#8A0053',
+    primaryLight: '#E5398B',
     secondary: '#1A1A2E',     // Navy đậm
     surface: '#FFFFFF',
-    background: '#F5F7FA',
-    text: '#1A1A2E',
-    textSecondary: '#6B7280',
-    success: '#00C853',
-    error: '#FF3B30',
-    warning: '#FF9500',
-    border: '#E5E7EB',
+    background: '#FFF0F5',    // Soft Pink thay vì F8F9FA
+    text: '#212121',
+    textSecondary: '#757575',
+    success: '#4CAF50',
+    error: '#F44336',
+    warning: '#FF9800',
+    border: '#EEEEEE',
+    
+    // Gradient colors cho toàn bộ app
+    gradientStart: '#FFE4EE', // Hồng siêu nhạt
+    gradientEnd: '#F8F9FA',   // Trắng ngà
 };
 
 export const fontSize = {
