@@ -26,12 +26,12 @@ export default function JoinFundScreen() {
 
     setLoading(true);
     try {
-      const fundId = await memberService.joinFundByCode(user as any, code.trim());
-      Alert.alert('Thành công', 'Bạn đã tham gia quỹ!', [
-        { text: 'OK', onPress: () => router.replace(`/fund/${fundId}`) }
+      const fundId = await memberService.requestJoinFundByCode(user as any, code.trim());
+      Alert.alert('Thành công', 'Đã gửi yêu cầu tham gia. Vui lòng chờ Chủ quỹ phê duyệt!', [
+        { text: 'OK', onPress: () => router.replace('/(tabs)') }
       ]);
     } catch (error: any) {
-      Alert.alert('Lỗi', error.message || 'Không thể tham gia quỹ');
+      Alert.alert('Lỗi', error.message || 'Không thể gửi yêu cầu');
     } finally {
       setLoading(false);
     }

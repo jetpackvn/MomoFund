@@ -4,6 +4,7 @@ import {
   getDoc,
   getDocs,
   setDoc,
+  addDoc,
   updateDoc,
   query,
   where,
@@ -12,11 +13,11 @@ import {
   COLLECTIONS,
   db
 } from '@/lib/firestore';
-import { Fund, User, FundMember } from '@/types';
+import { Fund, User, FundMember, JoinRequest } from '@/types';
 
 export const memberService = {
-  async joinFundByCode(user: User, code: string): Promise<string> {
-    // 1. Find fund by code
+  // Yêu cầu tham gia quỹ bằng mã (thay vì join trực tiếp)
+  async requestJoinFundByCode(user: User, code: string): Promise<string> {
     const fundQuery = query(
       collection(db, COLLECTIONS.FUNDS),
       where('code', '==', code.toUpperCase())
@@ -35,40 +36,104 @@ export const memberService = {
       throw new Error('Quỹ này đã đóng');
     }
 
-    // 2. Check if user is already a member
+    // Check if user is already a member
     const memberId = `${fundId}_${user.uid}`;
     const memberRef = doc(db, COLLECTIONS.FUND_MEMBERS, memberId);
-    
-    // We can also query to check, but doc ID is deterministic
-    const membershipsQuery = query(
-      collection(db, COLLECTIONS.FUND_MEMBERS),
-      where('fundId', '==', fundId),
-      where('userId', '==', user.uid)
-    );
-    const existingMembership = await getDocs(membershipsQuery);
+    const memberSnap = await getDoc(memberRef);
 
-    if (!existingMembership.empty) {
+    if (memberSnap.exists()) {
       throw new Error('Bạn đã là thành viên của quỹ này');
     }
 
-    // 3. Add to FUND_MEMBERS
-    const newMember: FundMember = {
+    // Check if there is already a pending request
+    const requestQuery = query(
+      collection(db, COLLECTIONS.JOIN_REQUESTS),
+      where('fundId', '==', fundId),
+      where('userId', '==', user.uid),
+      where('status', '==', 'pending')
+    );
+    const requestSnap = await getDocs(requestQuery);
+    if (!requestSnap.empty) {
+      throw new Error('Bạn đã gửi yêu cầu tham gia và đang chờ duyệt');
+    }
+
+    // Create join request
+    const joinReq: Omit<JoinRequest, 'id'> = {
       fundId,
       userId: user.uid,
-      displayName: user.displayName,
-      email: user.email,
+      userName: user.displayName,
+      status: 'pending',
+      createdAt: serverTimestamp() as any,
+    };
+
+    await addDoc(collection(db, COLLECTIONS.JOIN_REQUESTS), joinReq);
+
+    return fundId;
+  },
+
+  async getPendingJoinRequests(fundId: string): Promise<JoinRequest[]> {
+    const q = query(
+      collection(db, COLLECTIONS.JOIN_REQUESTS),
+      where('fundId', '==', fundId),
+      where('status', '==', 'pending')
+    );
+    const snap = await getDocs(q);
+    return snap.docs.map(d => ({ id: d.id, ...d.data() } as JoinRequest));
+  },
+
+  async approveJoinRequest(requestId: string, approverId: string) {
+    const reqRef = doc(db, COLLECTIONS.JOIN_REQUESTS, requestId);
+    const reqSnap = await getDoc(reqRef);
+    if (!reqSnap.exists()) throw new Error('Yêu cầu không tồn tại');
+    
+    const reqData = reqSnap.data() as JoinRequest;
+    if (reqData.status !== 'pending') throw new Error('Yêu cầu đã được xử lý');
+
+    // Add to members
+    const memberId = `${reqData.fundId}_${reqData.userId}`;
+    const memberRef = doc(db, COLLECTIONS.FUND_MEMBERS, memberId);
+    
+    const newMember: FundMember = {
+      fundId: reqData.fundId,
+      userId: reqData.userId,
+      displayName: reqData.userName,
+      email: '', // Not strictly needed or we can fetch user profile
       role: 'member',
       joinedAt: serverTimestamp() as any,
     };
 
     await setDoc(memberRef, newMember);
 
-    // 4. Increment memberCount in FUNDS
-    await updateDoc(doc(db, COLLECTIONS.FUNDS, fundId), {
-      memberCount: fundData.memberCount + 1
+    // Update request status
+    await updateDoc(reqRef, {
+      status: 'approved',
+      approvedBy: approverId,
+      approvedAt: serverTimestamp()
     });
 
-    return fundId;
+    // Increment fund member count
+    const fundRef = doc(db, COLLECTIONS.FUNDS, reqData.fundId);
+    const fundSnap = await getDoc(fundRef);
+    if (fundSnap.exists()) {
+      await updateDoc(fundRef, {
+        memberCount: (fundSnap.data().memberCount || 0) + 1
+      });
+    }
+  },
+
+  async rejectJoinRequest(requestId: string, approverId: string) {
+    const reqRef = doc(db, COLLECTIONS.JOIN_REQUESTS, requestId);
+    const reqSnap = await getDoc(reqRef);
+    if (!reqSnap.exists()) throw new Error('Yêu cầu không tồn tại');
+    
+    const reqData = reqSnap.data() as JoinRequest;
+    if (reqData.status !== 'pending') throw new Error('Yêu cầu đã được xử lý');
+
+    await updateDoc(reqRef, {
+      status: 'rejected',
+      rejectedBy: approverId,
+      rejectedAt: serverTimestamp()
+    });
   },
 
   async getFundMembers(fundId: string): Promise<FundMember[]> {

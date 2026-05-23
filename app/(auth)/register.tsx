@@ -278,7 +278,7 @@ const styles = StyleSheet.create({
   successText: { fontSize: fontSize.xs, color: colors.success, marginTop: 4 },
   // Password hint checklist
   pwHint: {
-    backgroundColor: '#F8F9FA', borderRadius: radius.sm,
+    backgroundColor: colors.background, borderRadius: radius.sm,
     padding: spacing.sm, marginTop: spacing.xs,
     borderWidth: 1, borderColor: colors.border,
     gap: 4,
