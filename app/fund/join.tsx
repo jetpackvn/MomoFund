@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, ActivityIndicator, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+
 import { useAuth } from '@/hooks/useAuth';
 import { memberService } from '@/services/memberService';
 import { colors, fontSize, spacing, radius } from '@/constants/theme';
+
+
 
 export default function JoinFundScreen() {
   const router = useRouter();
@@ -38,17 +40,11 @@ export default function JoinFundScreen() {
   };
 
   return (
-    <KeyboardAvoidingView 
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={24} color={colors.text} />
-        </TouchableOpacity>
-        <Text style={styles.title}>Tham gia quỹ</Text>
-        <View style={{ width: 40 }} />
-      </View>
+    <View style={styles.container}>
+      <KeyboardAvoidingView 
+        style={styles.container}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
 
       <View style={styles.form}>
         <Text style={styles.instruction}>Nhập mã quỹ gồm 6 ký tự do chủ quỹ cung cấp để tham gia.</Text>
@@ -78,19 +74,12 @@ export default function JoinFundScreen() {
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
-  header: { 
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', 
-    padding: spacing.md, paddingTop: spacing.xl,
-    backgroundColor: colors.surface,
-    borderBottomWidth: 1, borderBottomColor: colors.border
-  },
-  backBtn: { width: 40, height: 40, justifyContent: 'center' },
-  title: { fontSize: fontSize.lg, fontWeight: '700', color: colors.text },
   form: { padding: spacing.lg, gap: spacing.md },
   instruction: { fontSize: fontSize.md, color: colors.textSecondary, marginBottom: spacing.sm, textAlign: 'center' },
   inputGroup: { gap: spacing.xs },

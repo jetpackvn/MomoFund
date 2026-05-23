@@ -1,10 +1,10 @@
-import { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, ActivityIndicator, Alert, KeyboardAvoidingView, Platform } from 'react-native';
-import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+
+import { colors, fontSize, radius, spacing } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
 import { fundService } from '@/services/fundService';
-import { colors, fontSize, spacing, radius } from '@/constants/theme';
+import { useRouter } from 'expo-router';
+import { useState } from 'react';
+import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 export default function CreateFundScreen() {
   const router = useRouter();
@@ -39,19 +39,11 @@ export default function CreateFundScreen() {
   };
 
   return (
-    <KeyboardAvoidingView 
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={24} color={colors.text} />
-        </TouchableOpacity>
-        <Text style={styles.title}>Tạo quỹ mới</Text>
-        <View style={{ width: 40 }} />
-      </View>
-
-      <View style={styles.form}>
+    <View style={styles.container}>
+      <KeyboardAvoidingView
+        style={styles.form}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Tên quỹ *</Text>
           <TextInput
@@ -89,21 +81,13 @@ export default function CreateFundScreen() {
             <Text style={styles.submitText}>Tạo Quỹ</Text>
           )}
         </TouchableOpacity>
-      </View>
     </KeyboardAvoidingView>
+  </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
-  header: { 
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', 
-    padding: spacing.md, paddingTop: spacing.xl,
-    backgroundColor: colors.surface,
-    borderBottomWidth: 1, borderBottomColor: colors.border
-  },
-  backBtn: { width: 40, height: 40, justifyContent: 'center' },
-  title: { fontSize: fontSize.lg, fontWeight: '700', color: colors.text },
   form: { padding: spacing.lg, gap: spacing.md },
   inputGroup: { gap: spacing.xs },
   label: { fontSize: fontSize.sm, fontWeight: '600', color: colors.text },

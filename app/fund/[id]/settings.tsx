@@ -6,6 +6,7 @@ import { colors, fontSize, radius, spacing } from '@/constants/theme';
 import { useFund } from '@/hooks/useFund';
 import { fundService } from '@/services/fundService';
 import Button from '@/components/ui/Button';
+import { FundPageHeader } from '@/components/common/FundPageHeader';
 
 export default function FundSettingsScreen() {
   const { id: paramId } = useGlobalSearchParams();
@@ -81,19 +82,7 @@ export default function FundSettingsScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Cài đặt</Text>
-        <View style={styles.headerRight}>
-          <TouchableOpacity style={styles.iconBtnRight}>
-            <Ionicons name="headset-outline" size={20} color={colors.text} />
-          </TouchableOpacity>
-          <View style={styles.divider} />
-          <TouchableOpacity style={styles.iconBtnRight} onPress={() => router.push('/')}>
-            <Ionicons name="home-outline" size={20} color={colors.text} />
-          </TouchableOpacity>
-        </View>
-      </View>
+      <FundPageHeader title="Cài đặt" />
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
         
@@ -259,35 +248,12 @@ export default function FundSettingsScreen() {
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: colors.background },
-  
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    backgroundColor: '#FFF0F5', 
-    borderBottomWidth: 1,
-    borderBottomColor: '#FCE4EC',
-  },
-  headerTitle: { fontSize: 20, fontWeight: '700', color: colors.text },
-  headerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    borderRadius: 20,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 1,
-  },
-  iconBtnRight: { padding: 6 },
-  divider: { width: 1, height: 16, backgroundColor: colors.border, marginHorizontal: 4 },
 
-  scrollContent: { padding: spacing.md, paddingBottom: spacing.xxl },
+  scrollContent: { padding: spacing.md, paddingBottom: spacing.xl },
 
   card: {
     backgroundColor: '#fff',
-    borderRadius: radius.xl,
+    borderRadius: radius.lg,
     padding: spacing.lg,
     marginBottom: spacing.md,
     shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, elevation: 1,
@@ -364,7 +330,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#fff',
-    borderRadius: radius.xl,
+    borderRadius: radius.lg,
     padding: spacing.lg,
     marginBottom: spacing.md,
     shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, elevation: 1,
@@ -374,7 +340,7 @@ const styles = StyleSheet.create({
 
   // Modal
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: spacing.lg },
-  modalContent: { backgroundColor: '#fff', borderRadius: radius.xl, padding: spacing.xl },
+  modalContent: { backgroundColor: '#fff', borderRadius: radius.lg, padding: spacing.xl },
   modalTitle: { fontSize: 18, fontWeight: '700', color: colors.text, marginBottom: spacing.lg, textAlign: 'center' },
   inputGroup: { marginBottom: spacing.md },
   inputLabel: { fontSize: 14, fontWeight: '600', color: colors.text, marginBottom: spacing.xs },

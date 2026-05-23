@@ -1,13 +1,14 @@
-import React, { useState, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Alert, SafeAreaView } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { useGlobalSearchParams, useRouter } from 'expo-router';
-import { colors, fontSize, radius, spacing } from '@/constants/theme';
+import { FundPageHeader } from '@/components/common/FundPageHeader';
+import { colors, radius, spacing } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
 import { useFund } from '@/hooks/useFund';
 import { memberService } from '@/services/memberService';
 import { FundMember } from '@/types';
+import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
+import { useGlobalSearchParams, useRouter } from 'expo-router';
+import React, { useCallback, useState } from 'react';
+import { ActivityIndicator, Alert, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function FundMembersScreen() {
   const { id: paramId } = useGlobalSearchParams();
@@ -44,19 +45,7 @@ export default function FundMembersScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Thành viên</Text>
-        <View style={styles.headerRight}>
-          <TouchableOpacity style={styles.iconBtnRight}>
-            <Ionicons name="headset-outline" size={20} color={colors.text} />
-          </TouchableOpacity>
-          <View style={styles.divider} />
-          <TouchableOpacity style={styles.iconBtnRight} onPress={() => router.push('/')}>
-            <Ionicons name="home-outline" size={20} color={colors.text} />
-          </TouchableOpacity>
-        </View>
-      </View>
+      <FundPageHeader title="Thành viên" />
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
         
@@ -78,7 +67,10 @@ export default function FundMembersScreen() {
               
               <TouchableOpacity 
                 style={styles.manageRow} 
-                onPress={() => router.push({ pathname: `/fund/${id}/invite`, params: { tab: 'requests' } })}
+                onPress={() => {
+                  if (!id) return;
+                  router.push({ pathname: '/fund/[id]/invite', params: { id, tab: 'requests' } });
+                }}
               >
                 <Ionicons name="mail-outline" size={24} color="#616161" style={styles.manageIcon} />
                 <Text style={styles.manageText}>Duyệt yêu cầu tham gia quỹ</Text>
@@ -93,7 +85,10 @@ export default function FundMembersScreen() {
           <Text style={styles.sectionTitle}>Danh sách ({members.length})</Text>
           <TouchableOpacity 
             style={styles.inviteBtn}
-            onPress={() => router.push(`/fund/${id}/invite`)}
+            onPress={() => {
+              if (!id) return;
+              router.push({ pathname: '/fund/[id]/invite', params: { id } });
+            }}
           >
             <Ionicons name="add" size={16} color="#E91E63" />
             <Text style={styles.inviteBtnText}>Mời thành viên</Text>
@@ -119,11 +114,6 @@ export default function FundMembersScreen() {
                         <Ionicons name="star" size={10} color="#757575" style={{ marginRight: 4 }} />
                         <Text style={styles.roleText}>Chủ quỹ</Text>
                       </View>
-                    ) : member.role === 'admin' ? (
-                      <View style={styles.roleBadge}>
-                        <Ionicons name="shield-checkmark" size={10} color="#757575" style={{ marginRight: 4 }} />
-                        <Text style={styles.roleText}>Phó quỹ</Text>
-                      </View>
                     ) : null}
                   </View>
 
@@ -141,31 +131,8 @@ export default function FundMembersScreen() {
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#FFF' },
-  
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    backgroundColor: '#FFF0F5', // Nền hồng nhạt
-    borderBottomWidth: 1,
-    borderBottomColor: '#FCE4EC',
-  },
-  headerTitle: { fontSize: 18, fontWeight: '700', color: colors.text },
-  headerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    borderRadius: 20,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 1,
-  },
-  iconBtnRight: { padding: 6 },
-  divider: { width: 1, height: 16, backgroundColor: colors.border, marginHorizontal: 4 },
 
-  scrollContent: { padding: spacing.md, paddingBottom: spacing.xxl },
+  scrollContent: { padding: spacing.md, paddingBottom: spacing.xl },
 
   section: { marginBottom: spacing.xl },
   sectionTitle: { fontSize: 16, fontWeight: '700', color: '#424242', marginBottom: spacing.sm },

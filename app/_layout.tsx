@@ -29,8 +29,24 @@ export default function RootLayout() {
       <Stack.Screen name="(auth)" />
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="fund/[id]" options={{ headerShown: false }} />
-      <Stack.Screen name="fund/create" options={{ headerShown: false }} />
-      <Stack.Screen name="fund/join" options={{ headerShown: false }} />
+      <Stack.Screen name="fund/create" options={{ 
+        headerShown: true, 
+        title: 'Tạo quỹ mới',
+        headerStyle: { backgroundColor: colors.surface },
+        headerTitleStyle: { fontWeight: '700', color: colors.text },
+        headerTintColor: colors.primary,
+        headerTitleAlign: 'center',
+        headerBackTitle: '',
+      }} />
+      <Stack.Screen name="fund/join" options={{ 
+        headerShown: true, 
+        title: 'Tham gia quỹ',
+        headerStyle: { backgroundColor: colors.surface },
+        headerTitleStyle: { fontWeight: '700', color: colors.text },
+        headerTintColor: colors.primary,
+        headerTitleAlign: 'center',
+        headerBackTitle: '',
+      }} />
       <Stack.Screen name="transaction/contribute" options={{ headerShown: true, title: 'Đóng góp', headerTintColor: colors.primary }} />
       <Stack.Screen name="transaction/withdraw" options={{ headerShown: true, title: 'Yêu cầu rút tiền', headerTintColor: colors.primary }} />
     </Stack>

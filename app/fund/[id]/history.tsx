@@ -7,6 +7,7 @@ import { transactionService } from '@/services/transactionService';
 import { Transaction } from '@/types';
 import TransactionItem from '@/components/ui/TransactionItem';
 import { useFocusEffect } from '@react-navigation/native';
+import { FundPageHeader } from '@/components/common/FundPageHeader';
 
 export default function FundHistoryScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -50,7 +51,7 @@ export default function FundHistoryScreen() {
     let _in = 0;
     let _out = 0;
     currentMonthTransactions.forEach(t => {
-      if (t.type === 'contribute') _in += t.amount;
+      if (t.type === 'contribution') _in += t.amount;
       else _out += t.amount;
     });
     return { totalIn: _in, totalOut: _out };
@@ -88,7 +89,7 @@ export default function FundHistoryScreen() {
       let dayIn = 0;
       let dayOut = 0;
       group.data.forEach(t => {
-        if (t.type === 'contribute') dayIn += t.amount;
+        if (t.type === 'contribution') dayIn += t.amount;
         else dayOut += t.amount;
       });
 
@@ -115,12 +116,7 @@ export default function FundHistoryScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Lịch sử giao dịch</Text>
-        <TouchableOpacity style={styles.filterBtn}>
-          <Ionicons name="filter" size={20} color={colors.text} />
-        </TouchableOpacity>
-      </View>
+      <FundPageHeader title="Lịch sử giao dịch" />
 
       <View style={styles.monthSelectorWrapper}>
         <TouchableOpacity onPress={() => changeMonth(-1)} style={styles.arrowBtn}>
@@ -233,20 +229,6 @@ export default function FundHistoryScreen() {
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: colors.background },
-  
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
-    position: 'relative',
-  },
-  headerTitle: { fontSize: 18, fontWeight: '700', color: colors.text },
-  filterBtn: { position: 'absolute', right: spacing.md, padding: spacing.sm, backgroundColor: '#F5F5F5', borderRadius: 20 },
 
   monthSelectorWrapper: {
     flexDirection: 'row',
@@ -267,11 +249,11 @@ const styles = StyleSheet.create({
   monthText: { fontSize: 15, fontWeight: '700', color: colors.primary },
   arrowBtn: { padding: spacing.sm },
 
-  scrollContent: { padding: spacing.md, paddingBottom: spacing.xxl },
+  scrollContent: { padding: spacing.md, paddingBottom: spacing.xl },
 
   card: {
     backgroundColor: '#fff',
-    borderRadius: radius.xl,
+    borderRadius: radius.lg,
     padding: spacing.lg,
     marginBottom: spacing.md,
     shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, elevation: 1,
@@ -322,11 +304,11 @@ const styles = StyleSheet.create({
 
   transactionsContainer: {
     backgroundColor: '#fff',
-    borderRadius: radius.xl,
+    borderRadius: radius.lg,
     paddingHorizontal: spacing.md,
     shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, elevation: 1,
   },
 
-  emptyHistory: { alignItems: 'center', paddingVertical: spacing.xxl, marginTop: spacing.xl },
+  emptyHistory: { alignItems: 'center', paddingVertical: spacing.xl, marginTop: spacing.xl },
   emptyText: { fontSize: 14, color: colors.textSecondary, marginTop: spacing.md, fontWeight: '500' },
 });

@@ -5,7 +5,7 @@ import { notificationService } from '@/services/notificationService';
 import { useAuth } from '@/hooks/useAuth';
 import { Loading } from '@/components/common/Loading';
 import { EmptyState } from '@/components/common/EmptyState';
-import { Header } from '@/components/common/Header';
+import { TabPageHeader } from '@/components/common/TabPageHeader';
 import { colors, fontSize, spacing, radius } from '@/constants/theme';
 import { Notification } from '@/types';
 
@@ -62,17 +62,7 @@ export default function NotificationsScreen() {
 
   return (
     <View style={styles.container}>
-      <Header 
-        title="Thông báo" 
-        showBack={false}
-        rightAction={
-          unreadCount > 0 ? (
-            <TouchableOpacity onPress={handleMarkAllRead}>
-              <Ionicons name="checkmark-done-outline" size={24} color={colors.primary} />
-            </TouchableOpacity>
-          ) : null
-        }
-      />
+      <TabPageHeader title="Thông báo" />
 
       <FlatList
         data={notifications}

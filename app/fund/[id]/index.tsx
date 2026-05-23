@@ -1,4 +1,5 @@
 import { Loading } from '@/components/common/Loading';
+import { FundPageHeader } from '@/components/common/FundPageHeader';
 import Button from '@/components/ui/Button';
 import TransactionItem from '@/components/ui/TransactionItem';
 import { colors, fontSize, radius, spacing } from '@/constants/theme';
@@ -9,7 +10,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function FundHomeScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -53,7 +54,9 @@ export default function FundHomeScreen() {
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
+    <SafeAreaView style={styles.safeArea}>
+      <FundPageHeader title={fund.name} showBack={true} />
+      <ScrollView style={styles.scrollContainer} contentContainerStyle={styles.scrollContent}>
       {/* Header Info */}
       <View style={styles.headerArea}>
         <View style={styles.fundInfo}>
@@ -121,6 +124,7 @@ export default function FundHomeScreen() {
         )}
       </View>
     </ScrollView>
+    </SafeAreaView>
   );
 }
 
@@ -131,23 +135,24 @@ function SecondaryAction({ icon, label, onPress, color }: { icon: any, label: st
       <View style={[styles.secondaryIconCircle, { backgroundColor: `${color}15` }]}>
         <Ionicons name={icon} size={24} color={color} />
       </View>
-      <Text style={styles.secondaryActionLabel} numberOfLines={2} textAlign="center">{label}</Text>
+      <Text style={styles.secondaryActionLabel} numberOfLines={2}>{label}</Text>
     </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
+  safeArea: { flex: 1, backgroundColor: colors.background },
+  scrollContainer: { flex: 1, backgroundColor: colors.background },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   errorText: { fontSize: fontSize.md, color: colors.error },
-  scrollContent: { paddingBottom: spacing.xxl },
+  scrollContent: { paddingBottom: spacing.xl },
 
   headerArea: {
     backgroundColor: colors.surface,
     padding: spacing.lg,
-    paddingTop: spacing.xxl,
-    borderBottomLeftRadius: radius.xl,
-    borderBottomRightRadius: radius.xl,
+    paddingTop: spacing.xl,
+    borderBottomLeftRadius: radius.lg,
+    borderBottomRightRadius: radius.lg,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',

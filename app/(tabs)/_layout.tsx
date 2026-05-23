@@ -1,11 +1,11 @@
-import { useEffect } from 'react';
-import { Platform } from 'react-native';
-import { Tabs } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import * as Notifications from 'expo-notifications';
-import * as Device from 'expo-device';
 import { colors } from '@/constants/theme';
 import { useNotifications } from '@/hooks/useNotifications';
+import { Ionicons } from '@expo/vector-icons';
+import * as Device from 'expo-device';
+import * as Notifications from 'expo-notifications';
+import { Tabs } from 'expo-router';
+import { useEffect } from 'react';
+import { Platform } from 'react-native';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
