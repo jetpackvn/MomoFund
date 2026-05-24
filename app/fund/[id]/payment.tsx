@@ -1,13 +1,30 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useRouter, useGlobalSearchParams } from 'expo-router';
 import { colors, fontSize, radius, spacing } from '@/constants/theme';
 
 const { width } = Dimensions.get('window');
 
 export default function PaymentScreen() {
   const router = useRouter();
+  const { id: paramId } = useGlobalSearchParams();
+  const id = Array.isArray(paramId) ? paramId[0] : paramId;
+
+  const handleServiceClick = (serviceLabel: string) => {
+    const label = serviceLabel.replace('\n', ' ');
+    if (label.includes('Thanh toán hóa đơn')) {
+      router.push(`/fund/${id}/bill`);
+    } else if (label.includes('Du lịch - Đi lại')) {
+      router.push(`/fund/${id}/travel`);
+    } else if (label.includes('Mua vé xem phim')) {
+      router.push(`/fund/${id}/movie`);
+    } else if (label.includes('Đến ví MoMo') || label.includes('Đến Ngân hàng')) {
+      router.push(`/fund/${id}/transfer`);
+    } else {
+      router.push(`/transaction/withdraw?fundId=${id}&reason=${encodeURIComponent('Thanh toán: ' + label)}`);
+    }
+  };
 
   const services = [
     { icon: 'wallet', label: 'Đến ví\nMoMo', color: '#E91E63' },
@@ -52,7 +69,7 @@ export default function PaymentScreen() {
           
           <View style={styles.grid}>
             {services.map((item, index) => (
-              <TouchableOpacity key={index} style={styles.gridItem}>
+              <TouchableOpacity key={index} style={styles.gridItem} onPress={() => handleServiceClick(item.label)}>
                 <View style={styles.iconWrapper}>
                   <Ionicons name={item.icon as any} size={28} color={item.color} />
                 </View>

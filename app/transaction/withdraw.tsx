@@ -9,12 +9,12 @@ import { useState } from 'react';
 import { Alert, KeyboardAvoidingView, Platform, StyleSheet, Text, View } from 'react-native';
 
 export default function WithdrawScreen() {
-  const { fundId } = useLocalSearchParams<{ fundId: string }>();
+  const { fundId, reason: initialReason } = useLocalSearchParams<{ fundId: string, reason?: string }>();
   const router = useRouter();
   const { user } = useAuth();
   const { fund } = useFund(fundId);
   const [amount, setAmount] = useState('');
-  const [reason, setReason] = useState('');
+  const [reason, setReason] = useState(initialReason || '');
   const [loading, setLoading] = useState(false);
 
   const isOwner = user?.uid === fund?.ownerId;
