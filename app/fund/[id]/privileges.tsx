@@ -1,11 +1,15 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, Image } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import { colors, fontSize, radius, spacing } from '@/constants/theme';
+import { useRouter, useGlobalSearchParams } from 'expo-router';
+import { colors, radius, spacing } from '@/constants/theme';
 
 export default function PrivilegesScreen() {
   const router = useRouter();
+  const { id: paramId } = useGlobalSearchParams();
+  const id = Array.isArray(paramId) ? paramId[0] : paramId;
+
+  const [collectedOffers, setCollectedOffers] = useState<Set<number>>(new Set());
 
   const services = [
     { icon: 'receipt-outline', label: 'Thanh toán\nhóa đơn', color: '#00BCD4' },
@@ -26,6 +30,35 @@ export default function PrivilegesScreen() {
     { title: 'Giảm 2K', desc: 'khi đặt gọi xe từ 65K', type: 'Ứng dụng gọi xe', iconColor: '#E91E63' },
     { title: 'Giảm 50%', desc: 'Tới 15K khi Thanh toán...', type: 'Thanh toán', iconColor: '#2196F3' },
   ];
+
+  const handleServiceClick = (serviceLabel: string) => {
+    const label = serviceLabel.replace('\n', ' ');
+    if (label.includes('Thanh toán hóa đơn')) {
+      router.push(`/fund/${id}/bill`);
+    } else if (label.includes('Du lịch - Đi lại')) {
+      router.push(`/fund/${id}/travel`);
+    } else if (label.includes('Mua vé xem phim')) {
+      router.push(`/fund/${id}/movie`);
+    } else if (label.includes('Chuyển tiền')) {
+      router.push(`/fund/${id}/transfer`);
+    } else if (label.includes('Nạp điện thoại')) {
+      router.push(`/fund/${id}/topup`);
+    } else {
+      router.push(`/transaction/withdraw?fundId=${id}&reason=${encodeURIComponent('Thanh toán: ' + label)}`);
+    }
+  };
+
+  const handleCollectOffer = (index: number) => {
+    if (collectedOffers.has(index)) return;
+    Alert.alert('Thành công', 'Thu thập thành công! Ưu đãi đã được lưu vào ví của bạn.');
+    const newCollected = new Set(collectedOffers);
+    newCollected.add(index);
+    setCollectedOffers(newCollected);
+  };
+
+  const handleShowOfferDetails = (brand: string, discount: string) => {
+    Alert.alert('Chi tiết ưu đãi', `${brand}\n${discount}\n\nLưu ý: Chức năng đổi điểm hiện đang được thử nghiệm.`);
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -63,7 +96,7 @@ export default function PrivilegesScreen() {
           <Text style={styles.sectionTitle}>Chi tiêu tiện lợi hơn với Quỹ</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.servicesScroll}>
             {services.map((item, index) => (
-              <TouchableOpacity key={index} style={styles.serviceItem}>
+              <TouchableOpacity key={index} style={styles.serviceItem} onPress={() => handleServiceClick(item.label)}>
                 <Ionicons name={item.icon as any} size={28} color={item.color} style={{ marginBottom: 8 }} />
                 <Text style={styles.serviceLabel} textAlign="center">{item.label}</Text>
               </TouchableOpacity>
@@ -86,10 +119,8 @@ export default function PrivilegesScreen() {
           </View>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.offersScroll}>
             {offers.map((offer, index) => (
-              <View key={index} style={styles.offerCard}>
-                <View style={[styles.offerImageArea, { backgroundColor: offer.imgColor }]}>
-                  {/* Mocking the product image */}
-                </View>
+              <TouchableOpacity key={index} style={styles.offerCard} onPress={() => handleShowOfferDetails(offer.brand, offer.discount)}>
+                <View style={[styles.offerImageArea, { backgroundColor: offer.imgColor }]} />
                 <View style={styles.offerInfo}>
                   <Text style={styles.offerBrand} numberOfLines={1}>☕ {offer.brand}</Text>
                   <Text style={styles.offerDiscount}>{offer.discount}</Text>
@@ -100,7 +131,7 @@ export default function PrivilegesScreen() {
                     <Text style={styles.coinOld}>{offer.oldCoins}</Text>
                   </View>
                 </View>
-              </View>
+              </TouchableOpacity>
             ))}
           </ScrollView>
         </View>
@@ -112,19 +143,28 @@ export default function PrivilegesScreen() {
             <Ionicons name="chevron-forward-circle" size={20} color={colors.textSecondary} />
           </View>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.offersScroll}>
-            {exploreOffers.map((item, index) => (
-              <View key={index} style={styles.exploreCard}>
-                <View style={styles.exploreHeader}>
-                  <Ionicons name="cart-outline" size={16} color={item.iconColor} />
-                  <Text style={styles.exploreType}>{item.type}</Text>
+            {exploreOffers.map((item, index) => {
+              const isCollected = collectedOffers.has(index);
+              return (
+                <View key={index} style={styles.exploreCard}>
+                  <View style={styles.exploreHeader}>
+                    <Ionicons name="cart-outline" size={16} color={item.iconColor} />
+                    <Text style={styles.exploreType}>{item.type}</Text>
+                  </View>
+                  <Text style={styles.exploreTitle}>{item.title}</Text>
+                  <Text style={styles.exploreDesc} numberOfLines={1}>{item.desc}</Text>
+                  <TouchableOpacity 
+                    style={[styles.collectBtn, isCollected && styles.collectedBtn]}
+                    onPress={() => handleCollectOffer(index)}
+                    disabled={isCollected}
+                  >
+                    <Text style={[styles.collectBtnText, isCollected && styles.collectedBtnText]}>
+                      {isCollected ? 'Đã lưu' : 'Thu thập'}
+                    </Text>
+                  </TouchableOpacity>
                 </View>
-                <Text style={styles.exploreTitle}>{item.title}</Text>
-                <Text style={styles.exploreDesc} numberOfLines={1}>{item.desc}</Text>
-                <TouchableOpacity style={styles.collectBtn}>
-                  <Text style={styles.collectBtnText}>Thu thập</Text>
-                </TouchableOpacity>
-              </View>
-            ))}
+              );
+            })}
           </ScrollView>
         </View>
 
@@ -138,7 +178,7 @@ const styles = StyleSheet.create({
   scrollContent: { paddingBottom: spacing.xxl },
 
   bannerArea: {
-    backgroundColor: '#FFE4EE', // Mocking the pink gradient background
+    backgroundColor: '#FFE4EE',
     paddingTop: spacing.md,
     paddingBottom: spacing.xl,
   },
@@ -227,5 +267,10 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: '#E91E63',
     alignItems: 'center',
   },
+  collectedBtn: {
+    borderColor: '#BDBDBD',
+    backgroundColor: '#F5F5F5',
+  },
   collectBtnText: { fontSize: 12, fontWeight: '600', color: '#E91E63' },
+  collectedBtnText: { color: '#9E9E9E' },
 });
