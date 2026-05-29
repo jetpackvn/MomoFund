@@ -92,4 +92,4 @@ export interface Notification {
   fundId?: string;         // Link đến quỹ liên quan (optional)
   read: boolean;
   createdAt: Timestamp | Date;
-}
+}

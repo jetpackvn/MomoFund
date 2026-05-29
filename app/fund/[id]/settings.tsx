@@ -1,14 +1,14 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch, SafeAreaView, Alert, Modal, TextInput, ActivityIndicator } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { useRouter, useGlobalSearchParams } from 'expo-router';
-import { colors, fontSize, radius, spacing } from '@/constants/theme';
-import { useFund } from '@/hooks/useFund';
+import { FundPageHeader } from '@/components/common/FundPageHeader';
+import Button from '@/components/ui/Button';
+import { colors, radius, spacing } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
+import { useFund } from '@/hooks/useFund';
 import { fundService } from '@/services/fundService';
 import { memberService } from '@/services/memberService';
-import Button from '@/components/ui/Button';
-import { FundPageHeader } from '@/components/common/FundPageHeader';
+import { Ionicons } from '@expo/vector-icons';
+import { useGlobalSearchParams, useRouter } from 'expo-router';
+import React, { useState } from 'react';
+import { ActivityIndicator, Alert, Modal, SafeAreaView, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 export default function FundSettingsScreen() {
   const { id: paramId } = useGlobalSearchParams();
@@ -273,12 +273,7 @@ export default function FundSettingsScreen() {
         {/* Chỉ chủ quỹ mới thấy các nút nguy hiểm */}
         {isOwner && (
           <>
-            {/* Đóng quỹ */}
-            <TouchableOpacity style={styles.cardRow} onPress={handleDeleteFund} disabled={isDeleting}>
-              <Ionicons name="lock-closed-outline" size={24} color={colors.error} style={styles.cardRowIcon} />
-              <Text style={[styles.cardRowTitle, { color: colors.error }]}>Đóng quỹ</Text>
-              {isDeleting ? <ActivityIndicator color={colors.error} /> : <Ionicons name="chevron-forward" size={20} color={colors.error} />}
-            </TouchableOpacity>
+            {/* "Đóng quỹ" đã bị gỡ bỏ — dùng Giải tán / Rời quỹ thay thế */}
 
             {/* Giải tán quỹ */}
             <TouchableOpacity style={[styles.cardRow, styles.disbandRow]} onPress={handleDissolveFund} disabled={isDisbanding}>
