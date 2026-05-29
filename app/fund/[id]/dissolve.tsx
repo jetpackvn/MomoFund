@@ -1,27 +1,27 @@
+import { FundPageHeader } from '@/components/common/FundPageHeader';
+import { colors, radius, spacing } from '@/constants/theme';
+import { useAuth } from '@/hooks/useAuth';
+import { useFund } from '@/hooks/useFund';
+import { fundService } from '@/services/fundService';
+import { memberService } from '@/services/memberService';
+import { transactionService } from '@/services/transactionService';
+import { FundMember } from '@/types';
+import { Ionicons } from '@expo/vector-icons';
+import { useGlobalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  SafeAreaView,
-  Alert,
-  ActivityIndicator,
-  TextInput,
-  KeyboardAvoidingView,
-  Platform,
+    ActivityIndicator,
+    Alert,
+    KeyboardAvoidingView,
+    Platform,
+    SafeAreaView,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { useRouter, useGlobalSearchParams } from 'expo-router';
-import { colors, fontSize, radius, spacing } from '@/constants/theme';
-import { useFund } from '@/hooks/useFund';
-import { useAuth } from '@/hooks/useAuth';
-import { memberService } from '@/services/memberService';
-import { fundService } from '@/services/fundService';
-import { transactionService } from '@/services/transactionService';
-import { FundPageHeader } from '@/components/common/FundPageHeader';
-import { FundMember } from '@/types';
 
 type SplitMode = 'equal' | 'suggested' | 'custom';
 
@@ -72,7 +72,7 @@ export default function DissolveFundScreen() {
 
       const allocs: MemberAllocation[] = fetchedMembers.map((m) => ({
         userId: m.userId,
-        displayName: m.displayName,
+        displayName: m.displayName || 'Người dùng',
         amount: 0,
         contributedAmount: contributionMap[m.userId] ?? 0,
       }));
@@ -310,12 +310,12 @@ export default function DissolveFundScreen() {
                 {/* Avatar */}
                 <View style={styles.avatar}>
                   <Text style={styles.avatarText}>
-                    {alloc.displayName.charAt(0).toUpperCase()}
+                    {alloc.displayName?.trim()?.charAt(0)?.toUpperCase() || '?'}
                   </Text>
                 </View>
 
                 <View style={styles.memberInfo}>
-                  <Text style={styles.memberName}>{alloc.displayName}</Text>
+                  <Text style={styles.memberName}>{alloc.displayName || 'Người dùng'}</Text>
                   {splitMode === 'suggested' && (
                     <Text style={styles.memberContrib}>
                       Đã góp: {alloc.contributedAmount.toLocaleString('vi-VN')} ₫
