@@ -1,11 +1,12 @@
-import { Loading } from '@/components/common/Loading';
 import { FundPageHeader } from '@/components/common/FundPageHeader';
+import { Loading } from '@/components/common/Loading';
 import Button from '@/components/ui/Button';
 import TransactionItem from '@/components/ui/TransactionItem';
 import { colors, fontSize, radius, spacing } from '@/constants/theme';
+import { useAuth } from '@/hooks/useAuth';
 import { useFund } from '@/hooks/useFund';
 import { transactionService } from '@/services/transactionService';
-import { Transaction } from '@/types';
+import { Transaction, WithdrawRequest } from '@/types';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -15,9 +16,15 @@ import { ActivityIndicator, Alert, SafeAreaView, ScrollView, StyleSheet, Text, T
 export default function FundHomeScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const { user } = useAuth();
   const { fund, loading: fundLoading, error } = useFund(id);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loadingTransactions, setLoadingTransactions] = useState(true);
+  const [withdrawRequests, setWithdrawRequests] = useState<WithdrawRequest[]>([]);
+  const [loadingWithdrawRequests, setLoadingWithdrawRequests] = useState(false);
+  const [processingRequestId, setProcessingRequestId] = useState<string | null>(null);
+
+  const isOwner = user?.uid === fund?.ownerId;
 
   const loadTransactions = useCallback(async () => {
     if (!id) return;
@@ -33,14 +40,56 @@ export default function FundHomeScreen() {
     }
   }, [id]);
 
+  const loadWithdrawRequests = useCallback(async () => {
+    if (!id || !isOwner) return;
+    setLoadingWithdrawRequests(true);
+    try {
+      const data = await transactionService.getPendingWithdrawRequests(id);
+      setWithdrawRequests(data);
+    } catch (err) {
+      console.error('loadWithdrawRequests', err);
+    } finally {
+      setLoadingWithdrawRequests(false);
+    }
+  }, [id, isOwner]);
+
   useFocusEffect(
     useCallback(() => {
       loadTransactions();
-    }, [loadTransactions])
+      loadWithdrawRequests();
+    }, [loadTransactions, loadWithdrawRequests])
   );
 
   const handlePlaceholder = () => {
     Alert.alert('Thông báo', 'Tính năng đang được phát triển');
+  };
+
+  const handleApproveRequest = async (requestId: string) => {
+    if (!user) return;
+    setProcessingRequestId(requestId);
+    try {
+      await transactionService.approveWithdrawRequest(requestId, user.uid);
+      Alert.alert('Thành công', 'Đã duyệt yêu cầu rút tiền');
+      await Promise.all([loadTransactions(), loadWithdrawRequests()]);
+    } catch (err: any) {
+      Alert.alert('Lỗi', err?.message || 'Không thể duyệt yêu cầu rút tiền');
+    } finally {
+      setProcessingRequestId(null);
+    }
+  };
+
+  const handleRejectRequest = async (requestId: string) => {
+    if (!user) return;
+    setProcessingRequestId(requestId);
+    try {
+      await transactionService.rejectWithdrawRequest(requestId, user.uid);
+      Alert.alert('Thành công', 'Đã từ chối yêu cầu rút tiền');
+      await loadWithdrawRequests();
+    } catch (err: any) {
+      Alert.alert('Lỗi', err?.message || 'Không thể từ chối yêu cầu rút tiền');
+    } finally {
+      setProcessingRequestId(null);
+    }
   };
 
   if (fundLoading) return <Loading fullScreen />;
@@ -102,6 +151,60 @@ export default function FundHomeScreen() {
         <SecondaryAction icon="card" label="Thanh toán" onPress={() => router.push(`/fund/${id}/payment`)} color="#2196F3" />
         <SecondaryAction icon="qr-code" label="QR góp quỹ" onPress={() => router.push(`/fund/${id}/qr`)} color="#607D8B" />
       </View>
+
+      {isOwner && (
+        <View style={styles.withdrawSection}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Yêu cầu rút tiền</Text>
+            {withdrawRequests.length > 0 && (
+              <Text style={styles.pendingCount}>{withdrawRequests.length} chờ duyệt</Text>
+            )}
+          </View>
+
+          {loadingWithdrawRequests ? (
+            <ActivityIndicator color={colors.primary} style={{ marginTop: spacing.md }} />
+          ) : withdrawRequests.length === 0 ? (
+            <View style={styles.emptyWithdrawRequests}>
+              <Ionicons name="alert-circle-outline" size={36} color={colors.border} />
+              <Text style={styles.emptyText}>Không có yêu cầu rút tiền mới</Text>
+            </View>
+          ) : (
+            withdrawRequests.map((req) => {
+              const isProcessing = processingRequestId === req.id;
+              return (
+                <View key={req.id} style={styles.requestCard}>
+                  <View style={styles.requestRow}>
+                    <View style={styles.requestInfo}>
+                      <Text style={styles.requestName}>{req.requesterName}</Text>
+                      <Text style={styles.requestAmount}>{req.amount.toLocaleString('vi-VN')} ₫</Text>
+                      <Text style={styles.requestReason}>{req.reason}</Text>
+                    </View>
+                    <Text style={styles.requestStatus}>Chờ duyệt</Text>
+                  </View>
+
+                  <View style={styles.requestActions}>
+                    <Button
+                      label="Từ chối"
+                      variant="outline"
+                      fullWidth={false}
+                      style={{ flex: 1, marginRight: 8 }}
+                      onPress={() => handleRejectRequest(req.id)}
+                      disabled={isProcessing}
+                    />
+                    <Button
+                      label="Duyệt"
+                      fullWidth={false}
+                      style={{ flex: 1 }}
+                      onPress={() => handleApproveRequest(req.id)}
+                      disabled={isProcessing}
+                    />
+                  </View>
+                </View>
+              );
+            })
+          )}
+        </View>
+      )}
 
       {/* Recent Activity */}
       <View style={styles.section}>
@@ -220,6 +323,44 @@ const styles = StyleSheet.create({
 
   section: {
     paddingHorizontal: spacing.md,
+  },
+  withdrawSection: {
+    marginBottom: spacing.xl,
+    paddingHorizontal: spacing.md,
+  },
+  pendingCount: {
+    fontSize: fontSize.sm,
+    color: colors.primary,
+    fontWeight: '600',
+  },
+  emptyWithdrawRequests: {
+    alignItems: 'center',
+    gap: spacing.sm,
+    paddingVertical: spacing.lg,
+    opacity: 0.7,
+  },
+  requestCard: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  requestRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: spacing.md,
+  },
+  requestInfo: { flex: 1, paddingRight: spacing.sm },
+  requestName: { fontSize: fontSize.md, fontWeight: '700', color: colors.text },
+  requestAmount: { fontSize: fontSize.md, fontWeight: '700', color: colors.primary, marginTop: spacing.xs },
+  requestReason: { fontSize: fontSize.sm, color: colors.textSecondary, marginTop: spacing.xs },
+  requestStatus: { fontSize: fontSize.sm, color: colors.primary, fontWeight: '600' },
+  requestActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: spacing.sm,
   },
   sectionHeader: {
     flexDirection: 'row',
