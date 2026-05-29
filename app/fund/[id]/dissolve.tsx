@@ -86,6 +86,16 @@ export default function DissolveFundScreen() {
     }
   };
 
+  // Cập nhật lại phân bổ khi balance thay đổi sau khi loadData
+  useEffect(() => {
+    if (allocations.length > 0 && splitMode !== 'custom') {
+      const currentTotal = allocations.reduce((sum, a) => sum + a.amount, 0);
+      if (currentTotal !== balance) {
+        recalculate(splitMode, allocations, balance);
+      }
+    }
+  }, [balance, allocations, splitMode]);
+
   // Tính toán phân bổ theo mode
   const recalculate = (
     mode: SplitMode,

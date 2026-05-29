@@ -8,16 +8,24 @@ interface FundPageHeaderProps {
   showBack?: boolean;
 }
 
-export function FundPageHeader({ title, showBack = false }: FundPageHeaderProps) {
+export function FundPageHeader({ title, showBack = true }: FundPageHeaderProps) {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
+
+  const handleBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/(tabs)');
+    }
+  };
 
   return (
     <View style={styles.header}>
       {showBack ? (
         <TouchableOpacity
           style={styles.backBtn}
-          onPress={() => router.push('/(tabs)')}
+          onPress={handleBack}
         >
           <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
