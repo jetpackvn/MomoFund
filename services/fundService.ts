@@ -4,6 +4,7 @@ import {
   getDoc,
   getDocs,
   setDoc,
+  updateDoc,
   query,
   where,
   serverTimestamp,
@@ -108,6 +109,60 @@ export const fundService = {
     const fundRef = doc(db, COLLECTIONS.FUNDS, fundId);
     await updateDoc(fundRef, data as any);
   },
+
+  /**
+   * Giải tán quỹ: chia tiền cho các thành viên rồi xóa dữ liệu.
+   * Chỉ chủ quỹ (ownerId) mới có quyền thực hiện.
+   * allocations: map từ userId -> số tiền được nhận (tổng = balance)
+   */
+  async disbandFund(
+    fundId: string,
+    allocations: { userId: string; displayName: string; amount: number }[],
+    callerId?: string
+  ): Promise<void> {
+    // Kiểm tra quyền: chỉ owner mới được giải tán
+    const fundSnap = await getDoc(doc(db, COLLECTIONS.FUNDS, fundId));
+    if (!fundSnap.exists()) throw new Error('Không tìm thấy quỹ');
+    const fundData = fundSnap.data();
+    if (callerId && fundData.ownerId !== callerId) {
+      throw new Error('Chỉ chủ quỹ mới có quyền giải tán quỹ');
+    }
+
+    const batch = writeBatch(db);
+
+    // 1. Ghi transaction withdrawal cho từng người được chia tiền
+    for (const alloc of allocations) {
+      if (alloc.amount > 0) {
+        const txRef = doc(collection(db, COLLECTIONS.TRANSACTIONS));
+        batch.set(txRef, {
+          fundId,
+          userId: alloc.userId,
+          userName: alloc.displayName,
+          amount: alloc.amount,
+          note: 'Hoàn tiền khi giải tán quỹ',
+          type: 'withdrawal',
+          status: 'completed',
+          createdAt: serverTimestamp(),
+        });
+      }
+    }
+
+    // 2. Xóa tất cả thành viên
+    const membersQuery = query(
+      collection(db, COLLECTIONS.FUND_MEMBERS),
+      where('fundId', '==', fundId)
+    );
+    const membersSnap = await getDocs(membersQuery);
+    membersSnap.docs.forEach((docSnap) => {
+      batch.delete(docSnap.ref);
+    });
+
+    // 3. Xóa quỹ
+    batch.delete(doc(db, COLLECTIONS.FUNDS, fundId));
+
+    await batch.commit();
+  },
+
 
   async deleteFund(fundId: string): Promise<void> {
     // 1. Delete all members

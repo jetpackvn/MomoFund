@@ -4,7 +4,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useGlobalSearchParams } from 'expo-router';
 import { colors, fontSize, radius, spacing } from '@/constants/theme';
 import { useFund } from '@/hooks/useFund';
+import { useAuth } from '@/hooks/useAuth';
 import { fundService } from '@/services/fundService';
+import { memberService } from '@/services/memberService';
 import Button from '@/components/ui/Button';
 import { FundPageHeader } from '@/components/common/FundPageHeader';
 
@@ -14,7 +16,12 @@ export default function FundSettingsScreen() {
   
   const router = useRouter();
   const { fund } = useFund(id);
-  
+  const { user } = useAuth();
+
+  // Tính role dựa trên ownerId — không phụ thuộc virtual field
+  const isOwner = !!fund && !!user && fund.ownerId === user.uid;
+  const isMember = !!fund && !!user && fund.ownerId !== user.uid;
+
   const [isPrivate, setIsPrivate] = useState(true);
   const [receiveQr, setReceiveQr] = useState(false);
   const [fundType, setFundType] = useState<'saving' | 'spending'>('saving');
@@ -27,6 +34,8 @@ export default function FundSettingsScreen() {
 
   // Xóa quỹ
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isDisbanding, setIsDisbanding] = useState(false);
+  const [isLeaving, setIsLeaving] = useState(false);
 
   const handlePlaceholder = (feature: string) => {
     Alert.alert('Tính năng đang phát triển', `Chức năng "${feature}" sẽ sớm ra mắt.`);
@@ -78,6 +87,68 @@ export default function FundSettingsScreen() {
         }
       ]
     );
+  };
+
+  const handleLeaveFund = () => {
+    Alert.alert(
+      'Rời quỹ',
+      `Bạn có chắc chắn muốn rời quỹ "${fund?.name}" không? Bạn có thể xin tham gia lại sau.`,
+      [
+        { text: 'Hủy', style: 'cancel' },
+        {
+          text: 'Rời quỹ',
+          style: 'destructive',
+          onPress: async () => {
+            if (!id || !user) return;
+            setIsLeaving(true);
+            try {
+              await memberService.leaveFund(user.uid, id);
+              Alert.alert('Thành công', `Bạn đã rời quỹ "${fund?.name}".`, [
+                { text: 'OK', onPress: () => router.replace('/(tabs)') },
+              ]);
+            } catch (err: any) {
+              Alert.alert('Lỗi', err.message || 'Không thể rời quỹ. Vui lòng thử lại.');
+              setIsLeaving(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleDissolveFund = () => {
+    const balance = fund?.balance ?? 0;
+
+    if (balance === 0) {
+      // Số dư bằng 0 → giải tán luôn không cần chia
+      Alert.alert(
+        'Xác nhận giải tán',
+        `Số dư quỹ là 0 ₫. Quỹ "${fund?.name}" sẽ bị giải tán ngay lập tức. Bạn có chắc chắn?`,
+        [
+          { text: 'Hủy', style: 'cancel' },
+          {
+            text: 'Giải tán',
+            style: 'destructive',
+            onPress: async () => {
+              if (!id) return;
+              setIsDisbanding(true);
+              try {
+                await fundService.disbandFund(id, [], user?.uid);
+                Alert.alert('Thành công', 'Quỹ đã được giải tán!', [
+                  { text: 'OK', onPress: () => router.replace('/(tabs)') },
+                ]);
+              } catch (error: any) {
+                Alert.alert('Lỗi', error.message || 'Không thể giải tán quỹ');
+                setIsDisbanding(false);
+              }
+            },
+          },
+        ]
+      );
+    } else {
+      // Số dư > 0 → chuyển sang màn hình chọn cách chia
+      router.push(`/fund/${id}/dissolve`);
+    }
   };
 
   return (
@@ -182,7 +253,7 @@ export default function FundSettingsScreen() {
         </TouchableOpacity>
 
         {/* Đặt mục tiêu */}
-        <TouchableOpacity style={styles.card} onPress={() => handlePlaceholder('Đặt mục tiêu')}>
+        <TouchableOpacity style={styles.card} onPress={() => router.push(`/fund/${id}/goal`)}>
           <View style={styles.cardHeaderRow}>
             <View>
               <Text style={styles.cardTitle}>Đặt mục tiêu</Text>
@@ -193,18 +264,51 @@ export default function FundSettingsScreen() {
         </TouchableOpacity>
 
         {/* Hướng dẫn sử dụng */}
-        <TouchableOpacity style={styles.cardRow} onPress={() => handlePlaceholder('Hướng dẫn sử dụng')}>
+        <TouchableOpacity style={styles.cardRow} onPress={() => router.push(`/fund/${id}/guide`)}>
           <Ionicons name="book-outline" size={24} color={colors.text} style={styles.cardRowIcon} />
           <Text style={styles.cardRowTitle}>Hướng dẫn sử dụng</Text>
           <Ionicons name="chevron-forward" size={20} color={colors.text} />
         </TouchableOpacity>
 
-        {/* Đóng quỹ */}
-        <TouchableOpacity style={styles.cardRow} onPress={handleDeleteFund} disabled={isDeleting}>
-          <Ionicons name="lock-closed-outline" size={24} color={colors.error} style={styles.cardRowIcon} />
-          <Text style={[styles.cardRowTitle, { color: colors.error }]}>Đóng quỹ</Text>
-          {isDeleting ? <ActivityIndicator color={colors.error} /> : <Ionicons name="chevron-forward" size={20} color={colors.error} />}
-        </TouchableOpacity>
+        {/* Chỉ chủ quỹ mới thấy các nút nguy hiểm */}
+        {isOwner && (
+          <>
+            {/* Đóng quỹ */}
+            <TouchableOpacity style={styles.cardRow} onPress={handleDeleteFund} disabled={isDeleting}>
+              <Ionicons name="lock-closed-outline" size={24} color={colors.error} style={styles.cardRowIcon} />
+              <Text style={[styles.cardRowTitle, { color: colors.error }]}>Đóng quỹ</Text>
+              {isDeleting ? <ActivityIndicator color={colors.error} /> : <Ionicons name="chevron-forward" size={20} color={colors.error} />}
+            </TouchableOpacity>
+
+            {/* Giải tán quỹ */}
+            <TouchableOpacity style={[styles.cardRow, styles.disbandRow]} onPress={handleDissolveFund} disabled={isDisbanding}>
+              <Ionicons name="nuclear-outline" size={24} color="#fff" style={styles.cardRowIcon} />
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.cardRowTitle, { color: '#fff' }]}>Giải tán quỹ</Text>
+                <Text style={{ fontSize: 12, color: 'rgba(255,255,255,0.8)', marginTop: 2 }}>Chia tiền và xóa quỹ vĩnh viễn</Text>
+              </View>
+              {isDisbanding ? <ActivityIndicator color="#fff" /> : <Ionicons name="chevron-forward" size={20} color="#fff" />}
+            </TouchableOpacity>
+          </>
+        )}
+
+        {/* Thành viên thường: nút Rời quỹ */}
+        {isMember && (
+          <TouchableOpacity
+            style={[styles.cardRow, styles.leaveRow]}
+            onPress={handleLeaveFund}
+            disabled={isLeaving}
+          >
+            <Ionicons name="exit-outline" size={24} color={colors.error} style={styles.cardRowIcon} />
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.cardRowTitle, { color: colors.error }]}>Rời quỹ</Text>
+              <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 2 }}>Thoát khỏi quỹ này</Text>
+            </View>
+            {isLeaving
+              ? <ActivityIndicator color={colors.error} />
+              : <Ionicons name="chevron-forward" size={20} color={colors.error} />}
+          </TouchableOpacity>
+        )}
       </ScrollView>
 
       {/* Modal Sửa thông tin quỹ */}
@@ -337,6 +441,17 @@ const styles = StyleSheet.create({
   },
   cardRowIcon: { marginRight: spacing.md },
   cardRowTitle: { flex: 1, fontSize: 16, fontWeight: '700', color: '#212121' },
+
+  disbandRow: {
+    backgroundColor: '#B71C1C',
+    borderWidth: 0,
+  },
+
+  leaveRow: {
+    borderWidth: 1.5,
+    borderColor: colors.error,
+    backgroundColor: '#FFF5F5',
+  },
 
   // Modal
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: spacing.lg },
