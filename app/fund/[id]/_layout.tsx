@@ -164,6 +164,14 @@ export default function FundLayout() {
           headerShown: false,
         }}
       />
+      <Tabs.Screen
+        name="authorize"
+        options={{
+          href: null,
+          tabBarStyle: { display: 'none' },
+          headerShown: false,
+        }}
+      />
     </Tabs>
   );
 }

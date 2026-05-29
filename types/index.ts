@@ -28,7 +28,7 @@ export interface Fund {
   createdAt: Timestamp | Date;
 
   // Virtual field — KHÔNG lưu Firestore, gắn runtime tại client
-  role?: 'owner' | 'member';
+  role?: 'owner' | 'admin' | 'member';
 }
 
 // ─── FundMember ───────────────────────────────────────────────────────────────
@@ -38,7 +38,7 @@ export interface FundMember {
   userId: string;
   displayName: string;     // Tên thành viên — dùng trong MemberList
   email: string;
-  role: 'owner' | 'member';
+  role: 'owner' | 'admin' | 'member';
   joinedAt: Timestamp | Date;
 }
 
