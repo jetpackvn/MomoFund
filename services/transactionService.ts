@@ -6,6 +6,7 @@ import {
     doc,
     getDoc,
     getDocs,
+    increment,
     orderBy,
     query,
     serverTimestamp,
@@ -35,6 +36,8 @@ export const transactionService = {
 
     const batch = writeBatch(db);
     const txRef = doc(collection(db, COLLECTIONS.TRANSACTIONS));
+    const memberRef = doc(db, COLLECTIONS.FUND_MEMBERS, `${fundId}_${user.uid}`);
+
     batch.set(txRef, {
       fundId,
       userId: user.uid,
@@ -46,6 +49,7 @@ export const transactionService = {
       createdAt: serverTimestamp(),
     });
     batch.update(fundRef, { balance: newBalance });
+    batch.update(memberRef, { totalContributed: increment(amount) });
 
     await batch.commit();
     await activityLogService.createLog(

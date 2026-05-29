@@ -55,7 +55,6 @@ export const fundService = {
       email: user.email,
       role: 'owner',
       joinedAt: serverTimestamp() as any,
-      totalContributed: 0,
     };
 
     await setDoc(newMemberRef, member);

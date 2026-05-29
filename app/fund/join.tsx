@@ -1,10 +1,10 @@
-import { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, ActivityIndicator, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useState } from 'react';
+import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
+import { colors, fontSize, radius, spacing } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
 import { memberService } from '@/services/memberService';
-import { colors, fontSize, spacing, radius } from '@/constants/theme';
 
 
 
@@ -28,10 +28,16 @@ export default function JoinFundScreen() {
 
     setLoading(true);
     try {
-      const fundId = await memberService.requestJoinFundByCode(user as any, code.trim());
-      Alert.alert('Thành công', 'Đã gửi yêu cầu tham gia. Vui lòng chờ Chủ quỹ phê duyệt!', [
-        { text: 'OK', onPress: () => router.replace('/(tabs)') }
-      ]);
+      const { fundId, joinedDirectly } = await memberService.requestJoinFundByCode(user as any, code.trim());
+      Alert.alert(
+        'Thành công',
+        joinedDirectly
+          ? 'Bạn đã tham gia quỹ thành công!'
+          : 'Đã gửi yêu cầu tham gia. Vui lòng chờ Chủ quỹ phê duyệt!',
+        [
+          { text: 'OK', onPress: () => router.replace('/(tabs)') }
+        ]
+      );
     } catch (error: any) {
       Alert.alert('Lỗi', error.message || 'Không thể gửi yêu cầu');
     } finally {

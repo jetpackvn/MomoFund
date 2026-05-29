@@ -3,6 +3,7 @@ import { colors, radius, spacing } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
 import { useFund } from '@/hooks/useFund';
 import { memberService } from '@/services/memberService';
+import { transactionService } from '@/services/transactionService';
 import { FundMember } from '@/types';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
@@ -16,19 +17,41 @@ export default function FundMembersScreen() {
   const router = useRouter();
   const { user } = useAuth();
   const { fund } = useFund(id);
-  const [members, setMembers] = useState<FundMember[]>([]);
+  const [members, setMembers] = useState<(FundMember & { contributedAmount: number })[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const loadMembers = useCallback(() => {
+  const loadMembers = useCallback(async () => {
     if (!id) {
       setLoading(false);
       return;
     }
+
     setLoading(true);
-    memberService.getFundMembers(id)
-      .then(setMembers)
-      .catch(console.error)
-      .finally(() => setLoading(false));
+    try {
+      const [fundMembers, transactions] = await Promise.all([
+        memberService.getFundMembers(id),
+        transactionService.getTransactions(id),
+      ]);
+
+      const contributionMap: Record<string, number> = {};
+      transactions.forEach((tx) => {
+        if (tx.type === 'contribution') {
+          contributionMap[tx.userId] = (contributionMap[tx.userId] ?? 0) + tx.amount;
+        }
+      });
+
+      setMembers(
+        fundMembers.map((member) => ({
+          ...member,
+          contributedAmount: contributionMap[member.userId] ?? 0,
+        }))
+      );
+    } catch (error) {
+      console.error(error);
+      setMembers([]);
+    } finally {
+      setLoading(false);
+    }
   }, [id]);
 
   useFocusEffect(
@@ -117,7 +140,9 @@ export default function FundMembersScreen() {
                     ) : null}
                   </View>
 
-                  <Text style={styles.memberAmount}>Đã góp: 0đ</Text>
+                  <Text style={styles.memberAmount}>
+                    Đã góp: {member.contributedAmount.toLocaleString('vi-VN')} ₫
+                  </Text>
                 </View>
               );
             })

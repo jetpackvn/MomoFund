@@ -7,7 +7,7 @@ import { fundService } from '@/services/fundService';
 import { memberService } from '@/services/memberService';
 import { Ionicons } from '@expo/vector-icons';
 import { useGlobalSearchParams, useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Modal, SafeAreaView, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 export default function FundSettingsScreen() {
@@ -22,7 +22,8 @@ export default function FundSettingsScreen() {
   const isOwner = !!fund && !!user && fund.ownerId === user.uid;
   const isMember = !!fund && !!user && fund.ownerId !== user.uid;
 
-  const [isPrivate, setIsPrivate] = useState(true);
+  const [visibility, setVisibility] = useState<'private' | 'public'>('private');
+  const [isUpdatingVisibility, setIsUpdatingVisibility] = useState(false);
   const [receiveQr, setReceiveQr] = useState(false);
   const [fundType, setFundType] = useState<'saving' | 'spending'>('saving');
 
@@ -48,6 +49,12 @@ export default function FundSettingsScreen() {
       setIsEditModalVisible(true);
     }
   };
+
+  useEffect(() => {
+    if (fund?.visibility) {
+      setVisibility(fund.visibility);
+    }
+  }, [fund]);
 
   const handleSaveInfo = async () => {
     if (!id || !editName.trim()) return;
@@ -116,6 +123,25 @@ export default function FundSettingsScreen() {
     );
   };
 
+  const handleToggleVisibility = async () => {
+    if (!id || !fund || !isOwner) return;
+    const nextVisibility = visibility === 'private' ? 'public' : 'private';
+    setIsUpdatingVisibility(true);
+
+    try {
+      await fundService.updateFund(id, { visibility: nextVisibility });
+      setVisibility(nextVisibility);
+      Alert.alert(
+        'Thành công',
+        `Đã chuyển trạng thái quỹ sang ${nextVisibility === 'private' ? 'Riêng tư' : 'Công khai'}`
+      );
+    } catch (error: any) {
+      Alert.alert('Lỗi', error.message || 'Không thể cập nhật trạng thái quỹ');
+    } finally {
+      setIsUpdatingVisibility(false);
+    }
+  };
+
   const handleDissolveFund = () => {
     const balance = fund?.balance ?? 0;
 
@@ -161,16 +187,26 @@ export default function FundSettingsScreen() {
         <View style={styles.card}>
           <View style={styles.cardHeaderRow}>
             <Text style={styles.cardTitle}>Trạng thái quỹ</Text>
-            <TouchableOpacity style={styles.dropdownBtn}>
-              <Text style={styles.dropdownText}>{isPrivate ? 'Riêng tư' : 'Công khai'}</Text>
-              <Ionicons name="chevron-down" size={16} color={colors.text} />
+            <TouchableOpacity
+              style={[styles.dropdownBtn, isOwner ? undefined : styles.dropdownDisabled]}
+              onPress={handleToggleVisibility}
+              disabled={!isOwner || isUpdatingVisibility}
+              activeOpacity={isOwner ? 0.7 : 1}
+            >
+              <Text style={styles.dropdownText}>{visibility === 'private' ? 'Riêng tư' : 'Công khai'}</Text>
+              {isOwner && <Ionicons name="chevron-down" size={16} color={colors.text} />}
             </TouchableOpacity>
           </View>
           <Text style={styles.cardDesc}>
-            {isPrivate 
-              ? 'Thành viên mới cần bạn phê duyệt để tham gia quỹ.' 
-              : 'Bất kỳ ai cũng có thể tham gia quỹ.'}
+            {visibility === 'private'
+              ? 'Thành viên mới cần bạn phê duyệt để tham gia quỹ.'
+              : 'Bất kỳ ai có mã quỹ đều có thể tham gia ngay lập tức.'}
           </Text>
+          {isOwner && (
+            <Text style={styles.actionHint}>
+              Nhấn vào đây để chuyển sang {visibility === 'private' ? 'Công khai' : 'Riêng tư'}.
+            </Text>
+          )}
         </View>
 
         {/* Nhận tiền quỹ qua mã QR */}
@@ -375,7 +411,11 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     gap: 4,
   },
+  dropdownDisabled: {
+    opacity: 0.6,
+  },
   dropdownText: { fontSize: 14, fontWeight: '600', color: '#424242' },
+  actionHint: { marginTop: spacing.xs, color: colors.textSecondary, fontSize: 12 },
 
   linkText: { fontSize: 13, fontWeight: '700', color: '#E91E63' },
 

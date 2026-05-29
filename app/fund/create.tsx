@@ -12,6 +12,7 @@ export default function CreateFundScreen() {
   
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+  const [visibility, setVisibility] = useState<'private' | 'public'>('private');
   const [loading, setLoading] = useState(false);
 
   const handleCreate = async () => {
@@ -27,7 +28,7 @@ export default function CreateFundScreen() {
 
     setLoading(true);
     try {
-      const fundId = await fundService.createFund(name.trim(), description.trim(), user as any);
+      const fundId = await fundService.createFund(name.trim(), description.trim(), user as any, visibility);
       Alert.alert('Thành công', 'Đã tạo quỹ mới!', [
         { text: 'OK', onPress: () => router.replace(`/fund/${fundId}`) }
       ]);
@@ -70,6 +71,33 @@ export default function CreateFundScreen() {
           />
         </View>
 
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>Chế độ quỹ</Text>
+          <View style={styles.visibilityRow}>
+            <TouchableOpacity
+              style={[styles.visibilityOption, visibility === 'private' && styles.visibilityOptionActive]}
+              onPress={() => setVisibility('private')}
+            >
+              <Text style={[styles.visibilityText, visibility === 'private' && styles.visibilityTextActive]}>
+                Riêng tư
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.visibilityOption, visibility === 'public' && styles.visibilityOptionActive]}
+              onPress={() => setVisibility('public')}
+            >
+              <Text style={[styles.visibilityText, visibility === 'public' && styles.visibilityTextActive]}>
+                Công khai
+              </Text>
+            </TouchableOpacity>
+          </View>
+          <Text style={styles.visibilityHint}>
+            {visibility === 'private'
+              ? 'Chỉ chủ quỹ có thể duyệt thành viên mới.'
+              : 'Bất kỳ ai có mã quỹ đều có thể tham gia ngay lập tức.'}
+          </Text>
+        </View>
+
         <TouchableOpacity 
           style={[styles.submitBtn, (!name.trim() || loading) && styles.submitBtnDisabled]} 
           onPress={handleCreate}
@@ -99,6 +127,33 @@ const styles = StyleSheet.create({
     fontSize: fontSize.md, color: colors.text
   },
   textArea: { height: 100, paddingTop: 12 },
+  visibilityRow: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.sm },
+  visibilityOption: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    paddingVertical: 12,
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+  },
+  visibilityOptionActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  visibilityText: {
+    fontSize: fontSize.md,
+    color: colors.textSecondary,
+  },
+  visibilityTextActive: {
+    color: '#fff',
+    fontWeight: '700',
+  },
+  visibilityHint: {
+    marginTop: spacing.xs,
+    color: colors.textSecondary,
+    fontSize: fontSize.sm,
+  },
   submitBtn: {
     backgroundColor: colors.primary,
     paddingVertical: 14,

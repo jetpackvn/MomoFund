@@ -9,25 +9,26 @@
 
 import { db } from '@/lib/firebase';
 import {
-    addDoc,
-    collection,
-    CollectionReference,
-    deleteDoc,
-    doc,
-    DocumentData,
-    DocumentReference,
-    getDoc,
-    getDocs,
-    limit,
-    onSnapshot,
-    orderBy,
-    query,
-    QueryConstraint,
-    serverTimestamp,
-    setDoc,
-    updateDoc,
-    where,
-    writeBatch,
+  addDoc,
+  collection,
+  CollectionReference,
+  deleteDoc,
+  doc,
+  DocumentData,
+  DocumentReference,
+  getDoc,
+  getDocs,
+  increment,
+  limit,
+  onSnapshot,
+  orderBy,
+  query,
+  QueryConstraint,
+  serverTimestamp,
+  setDoc,
+  updateDoc,
+  where,
+  writeBatch,
 } from 'firebase/firestore';
 
 // ─── Collection names (dùng hằng để tránh typo) ──────────────────────────────
@@ -47,15 +48,15 @@ export const COLLECTIONS = {
 // Các service chỉ cần import từ '@/lib/firestore' thay vì 'firebase/firestore'
 
 export {
-    addDoc, collection, db, deleteDoc, doc,
-    getDoc,
-    getDocs, limit,
-    onSnapshot, orderBy, query, serverTimestamp, setDoc, updateDoc, where, writeBatch
+  addDoc, collection, db, deleteDoc, doc,
+  getDoc,
+  getDocs, increment, limit,
+  onSnapshot, orderBy, query, serverTimestamp, setDoc, updateDoc, where, writeBatch
 };
 
     export type {
-        CollectionReference, DocumentData, DocumentReference, QueryConstraint
-    };
+    CollectionReference, DocumentData, DocumentReference, QueryConstraint
+  };
 
 // ─── Utility helpers ──────────────────────────────────────────────────────────
 

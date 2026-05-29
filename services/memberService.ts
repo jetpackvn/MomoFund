@@ -1,24 +1,24 @@
 import {
-    addDoc,
-    collection,
-    COLLECTIONS,
-    db,
-    deleteDoc,
-    doc,
-    getDoc,
-    getDocs,
-    query,
-    serverTimestamp,
-    setDoc,
-    updateDoc,
-    where
+  addDoc,
+  collection,
+  COLLECTIONS,
+  db,
+  deleteDoc,
+  doc,
+  getDoc,
+  getDocs,
+  query,
+  serverTimestamp,
+  setDoc,
+  updateDoc,
+  where
 } from '@/lib/firestore';
 import { activityLogService } from '@/services/activityLogService';
 import { Fund, FundMember, JoinRequest, User } from '@/types';
 
 export const memberService = {
   // Yêu cầu tham gia quỹ bằng mã (thay vì join trực tiếp)
-  async requestJoinFundByCode(user: User, code: string): Promise<string> {
+  async requestJoinFundByCode(user: User, code: string): Promise<{ fundId: string; joinedDirectly: boolean }> {
     const fundQuery = query(
       collection(db, COLLECTIONS.FUNDS),
       where('code', '==', code.toUpperCase())
@@ -44,6 +44,27 @@ export const memberService = {
 
     if (memberSnap.exists()) {
       throw new Error('Bạn đã là thành viên của quỹ này');
+    }
+
+    if (fundData.visibility === 'public') {
+      const newMember: FundMember = {
+        fundId,
+        userId: user.uid,
+        displayName: user.displayName,
+        email: user.email,
+        role: 'member',
+        joinedAt: serverTimestamp() as any,
+        totalContributed: 0,
+      };
+
+      await setDoc(memberRef, newMember);
+
+      const fundRef = doc(db, COLLECTIONS.FUNDS, fundId);
+      await updateDoc(fundRef, {
+        memberCount: (fundData.memberCount || 0) + 1,
+      });
+
+      return { fundId, joinedDirectly: true };
     }
 
     // Check if there is already a pending request
@@ -72,7 +93,7 @@ export const memberService = {
     // Log activity: join request created
     await activityLogService.createLog(user.uid, 'request_join', 'fund', fundId, `requested to join fund ${fundId}`);
 
-    return fundId;
+    return { fundId, joinedDirectly: false };
   },
 
   async getPendingJoinRequests(fundId: string): Promise<JoinRequest[]> {
@@ -104,6 +125,7 @@ export const memberService = {
       email: '', // Not strictly needed or we can fetch user profile
       role: 'member',
       joinedAt: serverTimestamp() as any,
+      totalContributed: 0,
     };
 
     await setDoc(memberRef, newMember);

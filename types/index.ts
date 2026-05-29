@@ -24,6 +24,7 @@ export interface Fund {
   balance: number;
   code: string;            // Mã 6 ký tự để join
   memberCount: number;     // Tổng số thành viên
+  visibility: 'private' | 'public';
   status: 'active' | 'closed';
   createdAt: Timestamp | Date;
 
@@ -40,6 +41,7 @@ export interface FundMember {
   email: string;
   role: 'owner' | 'member';
   joinedAt: Timestamp | Date;
+  totalContributed: number;
 }
 
 // ─── Transaction ──────────────────────────────────────────────────────────────
