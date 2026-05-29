@@ -1,23 +1,22 @@
+import { FundPageHeader } from '@/components/common/FundPageHeader';
+import { colors, radius, spacing } from '@/constants/theme';
+import { useAuth } from '@/hooks/useAuth';
+import { useFund } from '@/hooks/useFund';
+import { fundService } from '@/services/fundService';
+import { Ionicons } from '@expo/vector-icons';
+import { useGlobalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  SafeAreaView,
-  Alert,
-  ActivityIndicator,
-  TextInput,
-  Platform,
+    ActivityIndicator,
+    Alert,
+    SafeAreaView,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { useRouter, useGlobalSearchParams } from 'expo-router';
-import { colors, fontSize, radius, spacing } from '@/constants/theme';
-import { useFund } from '@/hooks/useFund';
-import { useAuth } from '@/hooks/useAuth';
-import { fundService } from '@/services/fundService';
-import { FundPageHeader } from '@/components/common/FundPageHeader';
 
 // Preset nhanh
 const QUICK_AMOUNTS = [
@@ -90,7 +89,8 @@ export default function FundGoalScreen() {
       Alert.alert('Thành công', 'Đã lưu mục tiêu quỹ!');
       router.back();
     } catch (err: any) {
-      Alert.alert('Lỗi', err.message || 'Không thể lưu mục tiêu.');
+      console.error('saveGoal error', err);
+      router.replace('/error');
     } finally {
       setIsSaving(false);
     }
@@ -115,7 +115,8 @@ export default function FundGoalScreen() {
             setDeadline('');
             Alert.alert('Đã xoá', 'Mục tiêu đã được xoá.');
           } catch (err: any) {
-            Alert.alert('Lỗi', err.message || 'Không thể xoá mục tiêu.');
+              console.error('removeGoal error', err);
+              router.replace('/error');
           }
         },
       },

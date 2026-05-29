@@ -8,19 +8,60 @@ import {
     signOut,
     updateProfile,
 } from 'firebase/auth';
-import { doc, serverTimestamp, setDoc } from 'firebase/firestore';
+import { doc, serverTimestamp, setDoc, getDoc, onSnapshot } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
+import { Alert } from 'react-native';
 
 export function useAuth() {
   const [user, setUser] = useState<FirebaseUser | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let unsubscribeDoc: (() => void) | null = null;
+
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      setUser(firebaseUser);
-      setLoading(false);
+      if (unsubscribeDoc) {
+        unsubscribeDoc();
+        unsubscribeDoc = null;
+      }
+
+      if (firebaseUser) {
+        unsubscribeDoc = onSnapshot(
+          doc(db, 'users', firebaseUser.uid),
+          (docSnap) => {
+            if (docSnap.exists()) {
+              const data = docSnap.data();
+              const status = (data?.account_status || data?.accountStatus || '').toLowerCase();
+              if (status === 'locked') {
+                const reason = data?.locked_reason || data?.lockedReason || 'Không có lý do cụ thể';
+                signOut(auth);
+                Alert.alert('Thông báo', `Tài khoản bạn bị khoá vì lý do: ${reason}`);
+                setUser(null);
+                setLoading(false);
+                return;
+              }
+            }
+            setUser(firebaseUser);
+            setLoading(false);
+          },
+          (error) => {
+            console.error('Error listening to user document:', error);
+            setUser(firebaseUser);
+            setLoading(false);
+          }
+        );
+      } else {
+        setUser(null);
+        setLoading(false);
+      }
     });
-    return unsubscribe;
+
+    return () => {
+      unsubscribe();
+      if (unsubscribeDoc) {
+        unsubscribeDoc();
+      }
+    };
   }, []);
 
   const register = async (email: string, password: string, displayName: string) => {
@@ -30,6 +71,8 @@ export function useAuth() {
       uid: credential.user.uid,
       displayName,
       email,
+      accountStatus: 'active',
+      account_status: 'active',
       createdAt: serverTimestamp(),
     });
     await activityLogService.createLog(
@@ -44,6 +87,20 @@ export function useAuth() {
 
   const login = async (email: string, password: string) => {
     const credential = await signInWithEmailAndPassword(auth, email, password);
+    
+    // Check account status before proceeding
+    const userDocRef = doc(db, 'users', credential.user.uid);
+    const userSnap = await getDoc(userDocRef);
+    if (userSnap.exists()) {
+      const data = userSnap.data();
+      const status = (data?.account_status || data?.accountStatus || '').toLowerCase();
+      if (status === 'locked') {
+        await signOut(auth);
+        const reason = data?.locked_reason || data?.lockedReason || 'Không có lý do cụ thể';
+        throw new Error(`Tài khoản của bạn đã bị khoá với lý do: ${reason}`);
+      }
+    }
+
     await activityLogService.createLog(
       credential.user.uid,
       ACTIVITY_LOG_ACTIONS.USER_LOGIN,

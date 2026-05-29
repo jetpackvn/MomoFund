@@ -39,7 +39,8 @@ export default function JoinFundScreen() {
         ]
       );
     } catch (error: any) {
-      Alert.alert('Lỗi', error.message || 'Không thể gửi yêu cầu');
+      console.error('joinFund error', error);
+      router.replace('/error');
     } finally {
       setLoading(false);
     }

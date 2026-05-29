@@ -17,6 +17,8 @@ export const authHelpers = {
       uid: credential.user.uid,
       displayName,
       email,
+      accountStatus: 'active',
+      account_status: 'active',
       createdAt: serverTimestamp(),
     });
     return credential.user;

@@ -38,8 +38,8 @@ export default function ContributeScreen() {
       await transactionService.contribute(fundId, user as any, value, note.trim());
       Alert.alert('Thành công', 'Đã đóng góp vào quỹ', [{ text: 'OK', onPress: () => router.back() }]);
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Có lỗi xảy ra';
-      Alert.alert('Lỗi', message);
+      console.error('contribute error', error);
+      router.replace('/error');
     } finally {
       setLoading(false);
     }

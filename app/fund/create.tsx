@@ -33,7 +33,8 @@ export default function CreateFundScreen() {
         { text: 'OK', onPress: () => router.replace(`/fund/${fundId}`) }
       ]);
     } catch (error: any) {
-      Alert.alert('Lỗi', error.message || 'Không thể tạo quỹ');
+      console.error('createFund error', error);
+      router.replace('/error');
     } finally {
       setLoading(false);
     }

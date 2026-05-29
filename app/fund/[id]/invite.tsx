@@ -1,13 +1,13 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, ActivityIndicator, Clipboard } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { useLocalSearchParams, useRouter, useGlobalSearchParams } from 'expo-router';
-import { colors, fontSize, radius, spacing } from '@/constants/theme';
-import { useFund } from '@/hooks/useFund';
 import Button from '@/components/ui/Button';
+import { colors, fontSize, radius, spacing } from '@/constants/theme';
+import { useAuth } from '@/hooks/useAuth';
+import { useFund } from '@/hooks/useFund';
 import { memberService } from '@/services/memberService';
 import { JoinRequest } from '@/types';
-import { useAuth } from '@/hooks/useAuth';
+import { Ionicons } from '@expo/vector-icons';
+import { useGlobalSearchParams } from 'expo-router';
+import React, { useCallback, useEffect, useState } from 'react';
+import { ActivityIndicator, Alert, Clipboard, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 type TabKey = 'create' | 'manage' | 'requests';
 
@@ -61,7 +61,8 @@ export default function FundInviteScreen() {
       Alert.alert('Thành công', 'Đã duyệt yêu cầu');
       loadRequests();
     } catch (error: any) {
-      Alert.alert('Lỗi', error.message || 'Không thể duyệt yêu cầu');
+      console.error('approveJoinRequest error', error);
+      router.replace('/error');
     } finally {
       setProcessingId(null);
     }
@@ -75,7 +76,8 @@ export default function FundInviteScreen() {
       Alert.alert('Thành công', 'Đã từ chối yêu cầu');
       loadRequests();
     } catch (error: any) {
-      Alert.alert('Lỗi', error.message || 'Không thể từ chối yêu cầu');
+      console.error('rejectJoinRequest error', error);
+      router.replace('/error');
     } finally {
       setProcessingId(null);
     }

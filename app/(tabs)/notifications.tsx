@@ -8,7 +8,7 @@ import { notificationService } from '@/services/notificationService';
 import { Notification } from '@/types';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { Alert, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function NotificationsScreen() {
   const { user } = useAuth();
@@ -20,8 +20,8 @@ export default function NotificationsScreen() {
     try {
       await notificationService.markAllAsRead(user.uid);
     } catch (e) {
-      console.error(e);
-      Alert.alert('Lỗi', 'Không thể đánh dấu đã đọc');
+      console.error('markAllRead error', e);
+      router.replace('/error');
     }
   };
 

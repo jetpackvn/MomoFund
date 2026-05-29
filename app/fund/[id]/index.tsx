@@ -72,7 +72,8 @@ export default function FundHomeScreen() {
       Alert.alert('Thành công', 'Đã duyệt yêu cầu rút tiền');
       await Promise.all([loadTransactions(), loadWithdrawRequests()]);
     } catch (err: any) {
-      Alert.alert('Lỗi', err?.message || 'Không thể duyệt yêu cầu rút tiền');
+      console.error('approveWithdrawRequest error', err);
+      router.replace('/error');
     } finally {
       setProcessingRequestId(null);
     }
@@ -86,7 +87,8 @@ export default function FundHomeScreen() {
       Alert.alert('Thành công', 'Đã từ chối yêu cầu rút tiền');
       await loadWithdrawRequests();
     } catch (err: any) {
-      Alert.alert('Lỗi', err?.message || 'Không thể từ chối yêu cầu rút tiền');
+      console.error('rejectWithdrawRequest error', err);
+      router.replace('/error');
     } finally {
       setProcessingRequestId(null);
     }

@@ -6,7 +6,7 @@ import { memberService } from '@/services/memberService';
 import { FundMember } from '@/types';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
-import { useGlobalSearchParams } from 'expo-router';
+import { useGlobalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
 import { ActivityIndicator, Alert, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
@@ -15,6 +15,7 @@ export default function FundAuthorizeScreen() {
   const id = Array.isArray(paramId) ? paramId[0] : paramId;
   const { user } = useAuth();
   const { fund } = useFund(id);
+  const router = useRouter();
   const [members, setMembers] = useState<FundMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState<string | null>(null);
@@ -59,7 +60,8 @@ export default function FundAuthorizeScreen() {
               Alert.alert('Thành công', 'Đã cập nhật quyền thành viên');
               loadMembers();
             } catch (error: any) {
-              Alert.alert('Lỗi', error.message || 'Không thể cập nhật quyền');
+              console.error('updateRole error', error);
+              router.replace('/error');
             } finally {
               setProcessingId(null);
             }

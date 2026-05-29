@@ -64,7 +64,8 @@ export default function FundSettingsScreen() {
       Alert.alert('Thành công', 'Đã cập nhật thông tin quỹ!');
       setIsEditModalVisible(false);
     } catch (error: any) {
-      Alert.alert('Lỗi', error.message || 'Không thể cập nhật thông tin');
+      console.error('updateFundInfo error', error);
+      router.replace('/error');
     } finally {
       setIsEditing(false);
     }
@@ -87,7 +88,8 @@ export default function FundSettingsScreen() {
               Alert.alert('Thành công', 'Đã xóa quỹ!');
               router.replace('/(tabs)');
             } catch (error: any) {
-              Alert.alert('Lỗi', error.message || 'Không thể xóa quỹ');
+              console.error('deleteFund error', error);
+              router.replace('/error');
               setIsDeleting(false);
             }
           }
@@ -114,7 +116,8 @@ export default function FundSettingsScreen() {
                 { text: 'OK', onPress: () => router.replace('/(tabs)') },
               ]);
             } catch (err: any) {
-              Alert.alert('Lỗi', err.message || 'Không thể rời quỹ. Vui lòng thử lại.');
+                console.error('leaveFund error', err);
+                router.replace('/error');
               setIsLeaving(false);
             }
           },
@@ -136,7 +139,8 @@ export default function FundSettingsScreen() {
         `Đã chuyển trạng thái quỹ sang ${nextVisibility === 'private' ? 'Riêng tư' : 'Công khai'}`
       );
     } catch (error: any) {
-      Alert.alert('Lỗi', error.message || 'Không thể cập nhật trạng thái quỹ');
+      console.error('toggleVisibility error', error);
+      router.replace('/error');
     } finally {
       setIsUpdatingVisibility(false);
     }
@@ -164,7 +168,8 @@ export default function FundSettingsScreen() {
                   { text: 'OK', onPress: () => router.replace('/(tabs)') },
                 ]);
               } catch (error: any) {
-                Alert.alert('Lỗi', error.message || 'Không thể giải tán quỹ');
+                 console.error('disbandFund settings error', error);
+                 router.replace('/error');
                 setIsDisbanding(false);
               }
             },

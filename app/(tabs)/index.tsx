@@ -1,16 +1,20 @@
-import { useState, useEffect, useCallback } from 'react';
-import {
-  View, Text, StyleSheet, FlatList, TouchableOpacity,
-  RefreshControl, ActivityIndicator, Alert
-} from 'react-native';
-import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { EmptyState } from '@/components/common/EmptyState';
+import { Loading } from '@/components/common/Loading';
+import { colors, fontSize, radius, spacing } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
 import { fundService } from '@/services/fundService';
-import { Loading } from '@/components/common/Loading';
-import { EmptyState } from '@/components/common/EmptyState';
 import { Fund } from '@/types';
-import { colors, spacing, radius, fontSize } from '@/constants/theme';
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import { useCallback, useEffect, useState } from 'react';
+import {
+    FlatList,
+    RefreshControl,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
+} from 'react-native';
 
 function FundCard({ fund, onPress }: { fund: Fund; onPress: () => void }) {
   const isOwner = fund.role === 'owner';
@@ -53,7 +57,8 @@ export default function HomeScreen() {
       const withRole = data.map(f => ({ ...f, role: f.ownerId === user.uid ? 'owner' as const : 'member' as const }));
       setFunds(withRole);
     } catch (e) {
-      Alert.alert('Lỗi', 'Không thể tải danh sách quỹ');
+      console.error('loadFunds error', e);
+      router.replace('/error');
     }
   }, [user]);
 
@@ -95,6 +100,8 @@ export default function HomeScreen() {
           <Text style={styles.actionText}>Tham gia</Text>
         </TouchableOpacity>
       </View>
+
+      
 
       {/* Fund list */}
       <FlatList
@@ -139,6 +146,7 @@ const styles = StyleSheet.create({
     borderWidth: 1.5, borderColor: colors.primary,
   },
   actionText: { fontSize: fontSize.sm, fontWeight: '600', color: colors.primary },
+  
   list: { padding: spacing.md, gap: spacing.sm },
   emptyContainer: { flex: 1 },
   card: {

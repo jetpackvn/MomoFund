@@ -59,8 +59,8 @@ export default function WithdrawScreen() {
         ]);
       }
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Có lỗi xảy ra';
-      Alert.alert('Lỗi', message);
+      console.error('withdraw error', error);
+      router.replace('/error');
     } finally {
       setLoading(false);
     }

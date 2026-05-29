@@ -211,7 +211,8 @@ export default function DissolveFundScreen() {
         { text: 'OK', onPress: () => router.replace('/(tabs)') },
       ]);
     } catch (err: any) {
-      Alert.alert('Lỗi', err.message || 'Không thể giải tán quỹ. Vui lòng thử lại.');
+      console.error('disbandFund error', err);
+      router.replace('/error');
       setIsDisbanding(false);
     }
   };

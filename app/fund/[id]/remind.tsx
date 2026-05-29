@@ -1,15 +1,16 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, ActivityIndicator, Alert, SafeAreaView } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { useRouter, useGlobalSearchParams } from 'expo-router';
-import { colors, fontSize, radius, spacing } from '@/constants/theme';
+import AppBackground from '@/components/ui/AppBackground';
 import Button from '@/components/ui/Button';
+import { colors, radius, spacing } from '@/constants/theme';
+import { useAuth } from '@/hooks/useAuth';
+import { useFund } from '@/hooks/useFund';
+import { useNotifications } from '@/hooks/useNotifications';
 import { memberService } from '@/services/memberService';
 import { notificationService } from '@/services/notificationService';
-import { useFund } from '@/hooks/useFund';
-import { useAuth } from '@/hooks/useAuth';
 import { FundMember } from '@/types';
-import AppBackground from '@/components/ui/AppBackground';
+import { Ionicons } from '@expo/vector-icons';
+import { useGlobalSearchParams, useRouter } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, Alert, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 export default function FundRemindScreen() {
   const router = useRouter();
@@ -18,6 +19,9 @@ export default function FundRemindScreen() {
   
   const { user } = useAuth();
   const { fund } = useFund(id);
+  const { notifications } = useNotifications();
+
+  const isOwner = !!fund && !!user && fund.ownerId === user.uid;
 
   const [members, setMembers] = useState<FundMember[]>([]);
   const [loadingMembers, setLoadingMembers] = useState(true);
@@ -34,13 +38,16 @@ export default function FundRemindScreen() {
     const loadData = async () => {
       try {
         const data = await memberService.getFundMembers(id);
-        // Loại bỏ chính mình khỏi danh sách nhắc
-        const others = data.filter(m => m.userId !== user.uid);
-        setMembers(others);
         
-        // Mặc định chọn tất cả
-        const allIds = new Set(others.map(m => m.userId));
-        setSelectedIds(allIds);
+        // Filter out the fund owner from the members list
+        const filteredMembers = fund ? data.filter(m => m.userId !== fund.ownerId) : data;
+        setMembers(filteredMembers);
+
+        // If owner, default select all others (for sending reminders)
+        if (user && filteredMembers.length > 0 && fund?.ownerId === user.uid) {
+          const allIds = new Set(filteredMembers.map(m => m.userId));
+          setSelectedIds(allIds);
+        }
       } catch (err) {
         console.error(err);
       } finally {
@@ -48,7 +55,7 @@ export default function FundRemindScreen() {
       }
     };
     loadData();
-  }, [id, user]);
+  }, [id, user, fund]);
 
   const toggleSelection = (userId: string) => {
     const newSet = new Set(selectedIds);
@@ -62,7 +69,7 @@ export default function FundRemindScreen() {
 
   const toggleAll = () => {
     if (selectedIds.size === members.length) {
-      setSelectedIds(newSet => { newSet.clear(); return newSet; });
+      setSelectedIds(new Set());
     } else {
       setSelectedIds(new Set(members.map(m => m.userId)));
     }
@@ -108,7 +115,8 @@ export default function FundRemindScreen() {
         { text: 'OK', onPress: () => router.back() }
       ]);
     } catch (error: any) {
-      Alert.alert('Lỗi', error.message || 'Không thể tạo lời nhắc');
+      console.error('createReminder error', error);
+      router.replace('/error');
     } finally {
       setSubmitting(false);
     }
@@ -138,113 +146,136 @@ export default function FundRemindScreen() {
 
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           
-          {/* Thông tin lời nhắc */}
-          <View style={styles.card}>
-            <Text style={styles.cardSectionTitle}>Thông tin lời nhắc</Text>
-            <View style={styles.inputContainer}>
-              <Text style={styles.floatingLabel}>Tên lời nhắc ({reminderName.length}/50)</Text>
-              <TextInput
-                style={styles.input}
-                value={reminderName}
-                onChangeText={(text) => setReminderName(text.substring(0, 50))}
-                placeholder="Nhập tên lời nhắc..."
-              />
-            </View>
-          </View>
-
-          {/* Đặt lời nhắc định kỳ */}
-          <View style={styles.card}>
-            <View style={styles.periodicRow}>
-              <View style={styles.periodicInfo}>
-                <Text style={styles.cardSectionTitle}>Đặt lời nhắc định kỳ</Text>
-                <Text style={styles.periodicDesc}>MoMo tự động nhắc thành viên theo chu kỳ bạn chọn</Text>
+          {/* If owner -> show create UI; else show reminders sent to this user */}
+          {isOwner ? (
+            <>
+              {/* Thông tin lời nhắc */}
+              <View style={styles.card}>
+                <Text style={styles.cardSectionTitle}>Thông tin lời nhắc</Text>
+                <View style={styles.inputContainer}>
+                  <Text style={styles.floatingLabel}>Tên lời nhắc ({reminderName.length}/50)</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={reminderName}
+                    onChangeText={(text) => setReminderName(text.substring(0, 50))}
+                    placeholder="Nhập tên lời nhắc..."
+                  />
+                </View>
               </View>
-              <TouchableOpacity onPress={() => setIsPeriodic(!isPeriodic)}>
-                <Ionicons 
-                  name={isPeriodic ? "radio-button-on" : "radio-button-off"} 
-                  size={28} 
-                  color={isPeriodic ? colors.primary : colors.textSecondary} 
-                />
-              </TouchableOpacity>
-            </View>
-          </View>
 
-          {/* Khoản thu */}
-          <View style={styles.card}>
-            <Text style={styles.cardSectionTitle}>Khoản thu</Text>
-            <View style={[styles.inputContainer, { marginTop: spacing.xs, marginBottom: spacing.lg }]}>
-              <Text style={[styles.floatingLabel, { color: '#E91E63' }]}>Tổng tiền cần thu*</Text>
-              <View style={styles.amountInputRow}>
-                <TextInput
-                  style={styles.amountInput}
-                  value={amount}
-                  onChangeText={(val) => setAmount(formatAmount(val))}
-                  keyboardType="numeric"
-                />
-                <Text style={styles.currencySymbol}>đ</Text>
-              </View>
-            </View>
-
-            <View style={styles.membersHeaderRow}>
-              <Text style={styles.cardSectionTitle}>Nhắc cho ({selectedIds.size})</Text>
-              <TouchableOpacity onPress={toggleAll}>
-                <Text style={styles.selectAllText}>
-                  {selectedIds.size === members.length ? `Bỏ chọn tất cả (${members.length})` : `Chọn tất cả (${members.length})`}
-                </Text>
-              </TouchableOpacity>
-            </View>
-
-            {loadingMembers ? (
-              <ActivityIndicator color={colors.primary} style={{ marginVertical: spacing.md }} />
-            ) : members.length === 0 ? (
-              <Text style={styles.emptyMembers}>Không có thành viên nào để nhắc</Text>
-            ) : (
-              members.map((item) => {
-                const isSelected = selectedIds.has(item.userId);
-                return (
-                  <View key={item.userId} style={styles.memberRow}>
-                    <TouchableOpacity onPress={() => toggleSelection(item.userId)} style={{ padding: 4 }}>
-                      <Ionicons 
-                        name={isSelected ? "checkbox" : "square-outline"} 
-                        size={24} 
-                        color={isSelected ? '#E91E63' : colors.textSecondary} 
-                      />
-                    </TouchableOpacity>
-                    
-                    <View style={styles.memberAvatar}>
-                      <Text style={styles.avatarText}>{item.displayName?.substring(0, 2).toUpperCase() || 'U'}</Text>
-                    </View>
-                    
-                    <View style={styles.memberInfo}>
-                      <Text style={styles.memberName}>{item.displayName}</Text>
-                      {/* Fake phone number for UI completeness as requested */}
-                      <Text style={styles.memberPhone}>*******691</Text>
-                    </View>
-
-                    <View style={styles.memberAmountBox}>
-                      <Text style={styles.memberAmountText}>{amount === '0' || amount === '' ? '0đ' : `${amount}đ`}</Text>
-                      <View style={styles.memberAmountLine} />
-                    </View>
+              {/* Đặt lời nhắc định kỳ */}
+              <View style={styles.card}>
+                <View style={styles.periodicRow}>
+                  <View style={styles.periodicInfo}>
+                    <Text style={styles.cardSectionTitle}>Đặt lời nhắc định kỳ</Text>
+                    <Text style={styles.periodicDesc}>MoMo tự động nhắc thành viên theo chu kỳ bạn chọn</Text>
                   </View>
-                );
-              })
-            )}
-          </View>
+                  <TouchableOpacity onPress={() => setIsPeriodic(!isPeriodic)}>
+                    <Ionicons 
+                      name={isPeriodic ? "radio-button-on" : "radio-button-off"} 
+                      size={28} 
+                      color={isPeriodic ? colors.primary : colors.textSecondary} 
+                    />
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              {/* Khoản thu (owner only) */}
+              <View style={styles.card}>
+                <Text style={styles.cardSectionTitle}>Khoản thu</Text>
+                <View style={[styles.inputContainer, { marginTop: spacing.xs, marginBottom: spacing.lg }]}>
+                  <Text style={[styles.floatingLabel, { color: '#E91E63' }]}>Tổng tiền cần thu*</Text>
+                  <View style={styles.amountInputRow}>
+                    <TextInput
+                      style={styles.amountInput}
+                      value={amount}
+                      onChangeText={(val) => setAmount(formatAmount(val))}
+                      keyboardType="numeric"
+                    />
+                    <Text style={styles.currencySymbol}>đ</Text>
+                  </View>
+                </View>
+
+                <View style={styles.membersHeaderRow}>
+                  <Text style={styles.cardSectionTitle}>Nhắc cho ({selectedIds.size})</Text>
+                  <TouchableOpacity onPress={toggleAll}>
+                    <Text style={styles.selectAllText}>
+                      {selectedIds.size === members.length ? `Bỏ chọn tất cả (${members.length})` : `Chọn tất cả (${members.length})`}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+
+                {loadingMembers ? (
+                  <ActivityIndicator color={colors.primary} style={{ marginVertical: spacing.md }} />
+                ) : members.length === 0 ? (
+                  <Text style={styles.emptyMembers}>Không có thành viên nào để nhắc</Text>
+                ) : (
+                  members.map((item) => {
+                    const isSelected = selectedIds.has(item.userId);
+                    return (
+                      <View key={item.userId} style={styles.memberRow}>
+                        <TouchableOpacity onPress={() => toggleSelection(item.userId)} style={{ padding: 4 }}>
+                          <Ionicons 
+                            name={isSelected ? "checkbox" : "square-outline"} 
+                            size={24} 
+                            color={isSelected ? '#E91E63' : colors.textSecondary} 
+                          />
+                        </TouchableOpacity>
+                        
+                        <View style={styles.memberAvatar}>
+                          <Text style={styles.avatarText}>{item.displayName?.substring(0, 2).toUpperCase() || 'U'}</Text>
+                        </View>
+                        
+                        <View style={styles.memberInfo}>
+                          <Text style={styles.memberName}>{item.displayName}</Text>
+                          <Text style={styles.memberPhone}>*******691</Text>
+                        </View>
+
+                        <View style={styles.memberAmountBox}>
+                          <Text style={styles.memberAmountText}>{amount === '0' || amount === '' ? '0đ' : `${amount}đ`}</Text>
+                          <View style={styles.memberAmountLine} />
+                        </View>
+                      </View>
+                    );
+                  })
+                )}
+              </View>
+            </>
+          ) : (
+            <>
+              <View style={styles.card}>
+                <Text style={styles.cardSectionTitle}>Lời nhắc từ chủ quỹ</Text>
+                {notifications && notifications.filter(n => n.title === 'Nhắc nhở góp quỹ' && n.fundId === id).length === 0 ? (
+                  <Text style={{ color: colors.textSecondary, marginTop: spacing.md }}>Chưa có lời nhắc nào từ chủ quỹ.</Text>
+                ) : (
+                  notifications.filter(n => n.title === 'Nhắc nhở góp quỹ' && n.fundId === id).map(n => (
+                    <View key={n.id} style={{ marginTop: spacing.sm, padding: spacing.sm, backgroundColor: colors.surface, borderRadius: radius.sm }}>
+                      <Text style={{ fontWeight: '700', marginBottom: 6 }}>{n.title}</Text>
+                      <Text style={{ color: colors.textSecondary, marginBottom: 6 }}>{n.body}</Text>
+                      <Text style={{ fontSize: 12, color: colors.textSecondary }}>{n.createdAt ? new Date((n.createdAt as any).seconds * 1000).toLocaleString('vi-VN') : ''}</Text>
+                    </View>
+                  ))
+                )}
+              </View>
+            </>
+          )}
         </ScrollView>
 
-        {/* Bottom Button */}
-        <View style={styles.bottomBar}>
-          <Button 
-            label="Tạo lời nhắc" 
-            onPress={handleCreateReminder} 
-            loading={submitting}
-            disabled={selectedIds.size === 0 || submitting}
-            style={{ 
-              backgroundColor: selectedIds.size > 0 ? '#F4F5F7' : '#EEEEEE',
-            }}
-            textStyle={{ color: selectedIds.size > 0 ? colors.text : colors.textSecondary, fontWeight: '600' }}
-          />
-        </View>
+        {/* Bottom Button (owner only) */}
+        {isOwner && (
+          <View style={styles.bottomBar}>
+            <Button 
+              label="Tạo lời nhắc" 
+              onPress={handleCreateReminder} 
+              loading={submitting}
+              disabled={selectedIds.size === 0 || submitting}
+              style={{ 
+                backgroundColor: selectedIds.size > 0 ? '#F4F5F7' : '#EEEEEE',
+              }}
+              textStyle={{ color: selectedIds.size > 0 ? colors.text : colors.textSecondary, fontWeight: '600' }}
+            />
+          </View>
+        )}
       </SafeAreaView>
     </AppBackground>
   );
@@ -287,7 +318,7 @@ const styles = StyleSheet.create({
 
   card: {
     backgroundColor: '#fff',
-    borderRadius: radius.xl,
+    borderRadius: radius.lg,
     padding: spacing.lg,
     marginBottom: spacing.md,
     shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, elevation: 1,
