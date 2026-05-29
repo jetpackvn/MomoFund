@@ -88,7 +88,7 @@ export default function WithdrawScreen() {
           multiline
         />
 
-        <Button label="Gửi yêu cầu" onPress={handleSubmit} loading={loading} />
+        <Button label={isOwner ? 'Thanh toán' : 'Gửi yêu cầu'} onPress={handleSubmit} loading={loading} />
       </View>
     </KeyboardAvoidingView>
   );
