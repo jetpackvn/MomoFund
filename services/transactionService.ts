@@ -13,6 +13,7 @@ import {
     where,
     writeBatch,
 } from '@/lib/firestore';
+import { notificationService } from '@/services/notificationService';
 import { Fund, Transaction, User, WithdrawRequest } from '@/types';
 
 export const transactionService = {
@@ -98,6 +99,14 @@ export const transactionService = {
       status: 'pending',
       createdAt: serverTimestamp(),
     } as WithdrawRequest);
+
+    await notificationService.createNotification(
+      fund.ownerId,
+      'Yêu cầu rút tiền mới',
+      `${user.displayName} yêu cầu rút ${amount.toLocaleString('vi-VN')} ₫`,
+      'withdrawal',
+      fundId
+    );
 
     return { direct: false };
   },
@@ -185,6 +194,14 @@ export const transactionService = {
     });
 
     await batch.commit();
+
+    await notificationService.createNotification(
+      requestData.requesterId,
+      'Yêu cầu rút tiền được duyệt',
+      `Yêu cầu rút ${requestData.amount.toLocaleString('vi-VN')} ₫ của bạn đã được duyệt`,
+      'approval',
+      requestData.fundId
+    );
   },
 
   async rejectWithdrawRequest(requestId: string, approverId: string) {
@@ -205,5 +222,13 @@ export const transactionService = {
       approvedBy: approverId,
       approvedAt: serverTimestamp(),
     });
+
+    await notificationService.createNotification(
+      requestData.requesterId,
+      'Yêu cầu rút tiền bị từ chối',
+      `Yêu cầu rút ${requestData.amount.toLocaleString('vi-VN')} ₫ của bạn đã bị từ chối`,
+      'approval',
+      requestData.fundId
+    );
   },
 };

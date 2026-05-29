@@ -1,16 +1,18 @@
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { EmptyState } from '@/components/common/EmptyState';
+import { Loading } from '@/components/common/Loading';
+import { TabPageHeader } from '@/components/common/TabPageHeader';
+import { colors, fontSize, radius, spacing } from '@/constants/theme';
+import { useAuth } from '@/hooks/useAuth';
 import { useNotifications } from '@/hooks/useNotifications';
 import { notificationService } from '@/services/notificationService';
-import { useAuth } from '@/hooks/useAuth';
-import { Loading } from '@/components/common/Loading';
-import { EmptyState } from '@/components/common/EmptyState';
-import { TabPageHeader } from '@/components/common/TabPageHeader';
-import { colors, fontSize, spacing, radius } from '@/constants/theme';
 import { Notification } from '@/types';
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import { Alert, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function NotificationsScreen() {
   const { user } = useAuth();
+  const router = useRouter();
   const { notifications, unreadCount, loading } = useNotifications();
 
   const handleMarkAllRead = async () => {
@@ -27,7 +29,9 @@ export default function NotificationsScreen() {
     if (!item.read) {
       await notificationService.markAsRead(item.id);
     }
-    // TODO: Có thể navigate đến quỹ tương ứng nếu có fundId
+    if (item.fundId) {
+      router.push(`/fund/${item.fundId}`);
+    }
   };
 
   const renderItem = ({ item }: { item: Notification }) => {
