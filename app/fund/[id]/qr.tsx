@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { colors, fontSize, radius, spacing } from '@/constants/theme';
 import Button from '@/components/ui/Button';
 
 export default function FundQRScreen() {
   const router = useRouter();
+  const { id } = useLocalSearchParams<{ id: string }>();
   const [showQR, setShowQR] = useState(false);
 
   return (
@@ -20,7 +21,7 @@ export default function FundQRScreen() {
           <Text style={styles.headerTitle}>QR góp quỹ</Text>
         </View>
         <View style={styles.headerRight}>
-          <TouchableOpacity style={styles.iconBtnRight}>
+          <TouchableOpacity style={styles.iconBtnRight} onPress={() => router.push(`/fund/${id}/report`)}>
             <Ionicons name="headset-outline" size={20} color={colors.text} />
           </TouchableOpacity>
           <View style={styles.divider} />

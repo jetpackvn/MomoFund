@@ -184,7 +184,7 @@ export default function FundSettingsScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <FundPageHeader title="Cài đặt" />
+      <FundPageHeader title="Cài đặt" showSupport={false}/>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
         

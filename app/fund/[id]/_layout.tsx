@@ -172,6 +172,14 @@ export default function FundLayout() {
           headerShown: false,
         }}
       />
+      <Tabs.Screen
+        name="report"
+        options={{
+          href: null,
+          tabBarStyle: { display: 'none' },
+          headerShown: false,
+        }}
+      />
     </Tabs>
   );
 }

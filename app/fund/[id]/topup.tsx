@@ -41,7 +41,7 @@ export default function TopupScreen() {
               <Ionicons name="star-outline" size={20} color={colors.text} />
             </TouchableOpacity>
             <View style={styles.divider} />
-            <TouchableOpacity style={styles.iconBtnRight}>
+            <TouchableOpacity style={styles.iconBtnRight} onPress={() => router.push(`/fund/${id}/report`)}>
               <Ionicons name="headset-outline" size={20} color={colors.text} />
             </TouchableOpacity>
             <View style={styles.divider} />

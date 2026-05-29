@@ -123,3 +123,18 @@ export interface ActivityLog {
   ipAddress: string | null;
   createdAt: Timestamp | Date;
 }
+
+// ─── Report ──────────────────────────────────────────────────────────
+
+export interface Report {
+  id?: string;
+  reporterId: string;
+  targetType: 'user' | 'fund';
+  targetId: string;
+  reason: string;
+  reportStatus: 'pending' | 'resolved' | 'dismissed';
+  handledBy?: string;
+  resolutionNote?: string;
+  handledAt?: Timestamp | Date;
+  createdAt: Timestamp | Date;
+}

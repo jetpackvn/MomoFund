@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing } from '@/constants/theme';
@@ -6,9 +6,10 @@ import { colors, spacing } from '@/constants/theme';
 interface FundPageHeaderProps {
   title: string;
   showBack?: boolean;
+  showSupport?: boolean;
 }
 
-export function FundPageHeader({ title, showBack = true }: FundPageHeaderProps) {
+export function FundPageHeader({ title, showBack = true, showSupport = true }: FundPageHeaderProps) {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
 
@@ -36,10 +37,23 @@ export function FundPageHeader({ title, showBack = true }: FundPageHeaderProps) 
       <Text style={styles.headerTitle}>{title}</Text>
 
       <View style={styles.headerRight}>
-        <TouchableOpacity style={styles.iconBtnRight}>
-          <Ionicons name="headset-outline" size={20} color={colors.text} />
-        </TouchableOpacity>
-        <View style={styles.divider} />
+        {showSupport && (
+          <>
+            <TouchableOpacity 
+              style={styles.iconBtnRight}
+              onPress={() => {
+                if (id) {
+                  router.push(`/fund/${id}/report`);
+                } else {
+                  Alert.alert('Lỗi', 'Không thể xác định thông tin quỹ');
+                }
+              }}
+            >
+              <Ionicons name="headset-outline" size={20} color={colors.text} />
+            </TouchableOpacity>
+            <View style={styles.divider} />
+          </>
+        )}
         <TouchableOpacity
           style={styles.iconBtnRight}
           onPress={() => router.push('/(tabs)')}

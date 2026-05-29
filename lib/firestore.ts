@@ -42,6 +42,7 @@ export const COLLECTIONS = {
   ACTIVITY_LOGS: 'activityLogs',
   JOIN_REQUESTS: 'joinRequests',
   NOTIFICATIONS: 'notifications',
+  REPORTS: 'reports',
 } as const;
 
 // ─── Re-export Firestore helpers hay dùng ─────────────────────────────────────

@@ -137,7 +137,7 @@ export default function FundHistoryScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <FundPageHeader title="Lịch sử giao dịch" />
+      <FundPageHeader title="Lịch sử giao dịch" showSupport={false} />
 
       <View style={styles.monthSelectorWrapper}>
         <TouchableOpacity onPress={() => changeMonth(-1)} style={styles.arrowBtn}>

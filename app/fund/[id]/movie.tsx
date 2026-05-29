@@ -30,7 +30,7 @@ export default function MovieScreen() {
             </TouchableOpacity>
             <Text style={styles.headerTitle}>Mua vé xem phim</Text>
             <View style={styles.headerRight}>
-              <TouchableOpacity style={styles.iconBtnRight}>
+              <TouchableOpacity style={styles.iconBtnRight} onPress={() => router.push(`/fund/${id}/report`)}>
                 <Ionicons name="headset-outline" size={20} color={colors.text} />
               </TouchableOpacity>
               <View style={styles.divider} />

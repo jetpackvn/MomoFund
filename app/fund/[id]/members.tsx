@@ -69,7 +69,7 @@ export default function FundMembersScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <FundPageHeader title="Thành viên" />
+      <FundPageHeader title="Thành viên" showSupport={false} />
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
         
