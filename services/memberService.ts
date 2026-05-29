@@ -1,19 +1,20 @@
 import {
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  setDoc,
-  addDoc,
-  updateDoc,
-  query,
-  where,
-  serverTimestamp,
-  deleteDoc,
-  COLLECTIONS,
-  db
+    addDoc,
+    collection,
+    COLLECTIONS,
+    db,
+    deleteDoc,
+    doc,
+    getDoc,
+    getDocs,
+    query,
+    serverTimestamp,
+    setDoc,
+    updateDoc,
+    where
 } from '@/lib/firestore';
-import { Fund, User, FundMember, JoinRequest } from '@/types';
+import { activityLogService } from '@/services/activityLogService';
+import { Fund, FundMember, JoinRequest, User } from '@/types';
 
 export const memberService = {
   // Yêu cầu tham gia quỹ bằng mã (thay vì join trực tiếp)
@@ -68,6 +69,9 @@ export const memberService = {
 
     await addDoc(collection(db, COLLECTIONS.JOIN_REQUESTS), joinReq);
 
+    // Log activity: join request created
+    await activityLogService.createLog(user.uid, 'request_join', 'fund', fundId, `requested to join fund ${fundId}`);
+
     return fundId;
   },
 
@@ -111,6 +115,9 @@ export const memberService = {
       approvedAt: serverTimestamp()
     });
 
+    // Log activity: join request approved
+    await activityLogService.createLog(approverId, 'approve_join', 'joinRequest', requestId, `approved join for ${reqData.userId} into fund ${reqData.fundId}`);
+
     // Increment fund member count
     const fundRef = doc(db, COLLECTIONS.FUNDS, reqData.fundId);
     const fundSnap = await getDoc(fundRef);
@@ -134,6 +141,9 @@ export const memberService = {
       rejectedBy: approverId,
       rejectedAt: serverTimestamp()
     });
+
+    // Log activity: join request rejected
+    await activityLogService.createLog(approverId, 'reject_join', 'joinRequest', requestId, `rejected join for ${reqData.userId} into fund ${reqData.fundId}`);
   },
 
   async getFundMembers(fundId: string): Promise<FundMember[]> {
@@ -161,6 +171,9 @@ export const memberService = {
 
     // Delete membership
     await deleteDoc(memberRef);
+
+    // Log activity: member left fund
+    await activityLogService.createLog(userId, 'leave_fund', 'fund', fundId, `user ${userId} left fund ${fundId}`);
 
     // Decrement memberCount in FUNDS
     const fundRef = doc(db, COLLECTIONS.FUNDS, fundId);

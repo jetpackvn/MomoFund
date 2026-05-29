@@ -13,6 +13,7 @@ import {
     where,
     writeBatch,
 } from '@/lib/firestore';
+import { ACTIVITY_LOG_ACTIONS, activityLogService } from '@/services/activityLogService';
 import { notificationService } from '@/services/notificationService';
 import { Fund, Transaction, User, WithdrawRequest } from '@/types';
 
@@ -47,6 +48,13 @@ export const transactionService = {
     batch.update(fundRef, { balance: newBalance });
 
     await batch.commit();
+    await activityLogService.createLog(
+      user.uid,
+      ACTIVITY_LOG_ACTIONS.DEPOSIT_CREATED,
+      'fund',
+      fundId,
+      `deposited ${amount} into fund ${fundId}`
+    );
   },
 
   async requestWithdrawal(fundId: string, user: User, amount: number, reason: string) {
@@ -87,6 +95,8 @@ export const transactionService = {
       });
 
       await batch.commit();
+      // Log activity: direct withdrawal created
+      await activityLogService.createLog(user.uid, ACTIVITY_LOG_ACTIONS.WITHDRAW_CREATED, 'fund', fundId, `owner ${user.displayName} withdrew ${amount}`);
       return { direct: true };
     }
 
@@ -108,6 +118,8 @@ export const transactionService = {
       fundId
     );
 
+    // Log activity: withdrawal request created
+    await activityLogService.createLog(user.uid, ACTIVITY_LOG_ACTIONS.WITHDRAW_CREATED, 'fund', fundId, `requested ${amount} - ${reason}`);
     return { direct: false };
   },
 
@@ -202,6 +214,14 @@ export const transactionService = {
       'approval',
       requestData.fundId
     );
+    // Log activity: withdrawal approved
+    await activityLogService.createLog(
+      approverId,
+      ACTIVITY_LOG_ACTIONS.WITHDRAW_APPROVED,
+      'withdrawRequest',
+      requestId,
+      `approved ${requestData.amount} for ${requestData.requesterName}`
+    );
   },
 
   async rejectWithdrawRequest(requestId: string, approverId: string) {
@@ -229,6 +249,14 @@ export const transactionService = {
       `Yêu cầu rút ${requestData.amount.toLocaleString('vi-VN')} ₫ của bạn đã bị từ chối`,
       'approval',
       requestData.fundId
+    );
+    // Log activity: withdrawal rejected
+    await activityLogService.createLog(
+      approverId,
+      ACTIVITY_LOG_ACTIONS.WITHDRAW_REJECTED,
+      'withdrawRequest',
+      requestId,
+      `rejected ${requestData.amount} for ${requestData.requesterName}`
     );
   },
 };
