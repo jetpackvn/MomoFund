@@ -184,5 +184,21 @@ export const memberService = {
         memberCount: Math.max(0, currentCount - 1)
       });
     }
+  },
+
+  async updateRole(fundId: string, userId: string, role: 'admin' | 'member'): Promise<void> {
+    const memberId = `${fundId}_${userId}`;
+    const memberRef = doc(db, COLLECTIONS.FUND_MEMBERS, memberId);
+    const memberSnap = await getDoc(memberRef);
+
+    if (!memberSnap.exists()) {
+      throw new Error('Thành viên không tồn tại trong quỹ');
+    }
+
+    if (memberSnap.data()?.role === 'owner') {
+      throw new Error('Không thể thay đổi quyền của chủ quỹ');
+    }
+
+    await updateDoc(memberRef, { role });
   }
 };

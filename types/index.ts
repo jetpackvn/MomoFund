@@ -28,7 +28,7 @@ export interface Fund {
   createdAt: Timestamp | Date;
 
   // Virtual field — KHÔNG lưu Firestore, gắn runtime tại client
-  role?: 'owner' | 'member';
+  role?: 'owner' | 'admin' | 'member';
 }
 
 // ─── FundMember ───────────────────────────────────────────────────────────────
@@ -38,7 +38,7 @@ export interface FundMember {
   userId: string;
   displayName: string;     // Tên thành viên — dùng trong MemberList
   email: string;
-  role: 'owner' | 'member';
+  role: 'owner' | 'admin' | 'member';
   joinedAt: Timestamp | Date;
 }
 
@@ -91,33 +91,5 @@ export interface Notification {
   type: 'contribution' | 'withdrawal' | 'join' | 'approval';
   fundId?: string;         // Link đến quỹ liên quan (optional)
   read: boolean;
-  createdAt: Timestamp | Date;
-}
-
-export type ActivityLogAction =
-  | 'USER_REGISTERED'
-  | 'USER_LOGIN'
-  | 'USER_LOGOUT'
-  | 'ADMIN_LOGIN'
-  | 'FUND_CREATED'
-  | 'FUND_UPDATED'
-  | 'FUND_CLOSED'
-  | 'DEPOSIT_CREATED'
-  | 'WITHDRAW_CREATED'
-  | 'WITHDRAW_APPROVED'
-  | 'WITHDRAW_REJECTED'
-  | 'REPORT_CREATED'
-  | 'USER_LOCKED'
-  | 'USER_UNLOCKED'
-  | 'REPORT_RESOLVED';
-
-export interface ActivityLog {
-  id: string;
-  actorId: string;
-  action: ActivityLogAction | string;
-  targetType: string | null;
-  targetId: string | null;
-  detail: string | null;
-  ipAddress: string | null;
   createdAt: Timestamp | Date;
 }
