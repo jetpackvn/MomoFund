@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, SafeAreaView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useLocalSearchParams } from 'expo-router';
+import { useGlobalSearchParams } from 'expo-router';
 import { colors, fontSize, radius, spacing } from '@/constants/theme';
 import { transactionService } from '@/services/transactionService';
 import { Transaction } from '@/types';
@@ -10,7 +10,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { FundPageHeader } from '@/components/common/FundPageHeader';
 
 export default function FundHistoryScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id } = useGlobalSearchParams<{ id: string }>();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
@@ -41,9 +41,28 @@ export default function FundHistoryScreen() {
   };
 
   const currentMonthTransactions = useMemo(() => {
+    console.log('[History] All transactions:', transactions.length, transactions.map(t => ({
+      id: t.id, type: t.type, amount: t.amount,
+      createdAtRaw: t.createdAt,
+      createdAtType: typeof t.createdAt,
+      hasToDate: typeof (t.createdAt as any)?.toDate === 'function',
+    })));
+    console.log('[History] currentDate (filter):', currentDate.getMonth() + 1, '/', currentDate.getFullYear());
     return transactions.filter(t => {
-      const date = t.createdAt instanceof Date ? t.createdAt : (t.createdAt as any)?.toDate?.() || new Date();
-      return date.getMonth() === currentDate.getMonth() && date.getFullYear() === currentDate.getFullYear();
+      const raw = t.createdAt;
+      let date: Date;
+      if (raw instanceof Date) {
+        date = raw;
+      } else if (raw && typeof (raw as any).toDate === 'function') {
+        date = (raw as any).toDate();
+      } else if (raw && typeof (raw as any).seconds === 'number') {
+        date = new Date((raw as any).seconds * 1000);
+      } else {
+        date = new Date();
+      }
+      const match = date.getMonth() === currentDate.getMonth() && date.getFullYear() === currentDate.getFullYear();
+      console.log('[History] tx', t.id, 'date:', date.toISOString(), 'match:', match);
+      return match;
     });
   }, [transactions, currentDate]);
 
@@ -54,12 +73,14 @@ export default function FundHistoryScreen() {
       if (t.type === 'contribution') _in += t.amount;
       else _out += t.amount;
     });
+    console.log('[History] totalIn:', _in, 'totalOut:', _out, 'from', currentMonthTransactions.length, 'tx');
     return { totalIn: _in, totalOut: _out };
   }, [currentMonthTransactions]);
 
+  const TRACK_HEIGHT = 110;
   const maxAmount = Math.max(totalIn, totalOut) || 1;
-  const inHeight = totalIn > 0 ? (totalIn / maxAmount) * 100 : 5;
-  const outHeight = totalOut > 0 ? (totalOut / maxAmount) * 100 : 5;
+  const inHeight = totalIn > 0 ? (totalIn / maxAmount) * TRACK_HEIGHT : 5;
+  const outHeight = totalOut > 0 ? (totalOut / maxAmount) * TRACK_HEIGHT : 5;
 
   // Nhóm giao dịch theo ngày
   const groupedTransactions = useMemo(() => {
@@ -145,14 +166,14 @@ export default function FundHistoryScreen() {
             <View style={styles.barColumn}>
               <Text style={[styles.barValue, { color: '#4CAF50' }]}>+{totalIn.toLocaleString('vi-VN')}đ</Text>
               <View style={styles.barTrack}>
-                <View style={[styles.barFill, { height: `${inHeight}%`, backgroundColor: '#4CAF50' }]} />
+                <View style={[styles.barFill, { height: inHeight, backgroundColor: '#4CAF50' }]} />
               </View>
               <Text style={styles.barLabel}>Tiền vào</Text>
             </View>
             <View style={styles.barColumn}>
               <Text style={[styles.barValue, { color: '#F44336' }]}>-{totalOut.toLocaleString('vi-VN')}đ</Text>
               <View style={styles.barTrack}>
-                <View style={[styles.barFill, { height: `${outHeight}%`, backgroundColor: '#F44336' }]} />
+                <View style={[styles.barFill, { height: outHeight, backgroundColor: '#F44336' }]} />
               </View>
               <Text style={styles.barLabel}>Tiền ra</Text>
             </View>

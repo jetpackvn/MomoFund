@@ -63,7 +63,8 @@ export default function FundMembersScreen() {
   const isOwner = user?.uid === fund?.ownerId;
 
   const handleAuthorize = () => {
-    Alert.alert('Tính năng đang phát triển', 'Sắp tới bạn có thể thêm phó quỹ ở đây.');
+    if (!id) return;
+    router.push({ pathname: '/fund/[id]/authorize', params: { id } });
   };
 
   return (
@@ -136,6 +137,11 @@ export default function FundMembersScreen() {
                       <View style={styles.roleBadge}>
                         <Ionicons name="star" size={10} color="#757575" style={{ marginRight: 4 }} />
                         <Text style={styles.roleText}>Chủ quỹ</Text>
+                      </View>
+                    ) : member.role === 'admin' ? (
+                      <View style={styles.roleBadge}>
+                        <Ionicons name="shield-checkmark" size={10} color="#4CAF50" style={{ marginRight: 4 }} />
+                        <Text style={[styles.roleText, { color: '#4CAF50' }]}>Phó quỹ</Text>
                       </View>
                     ) : null}
                   </View>
