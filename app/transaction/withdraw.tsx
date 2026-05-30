@@ -4,9 +4,10 @@ import { colors, fontSize, radius, spacing } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
 import { useFund } from '@/hooks/useFund';
 import { transactionService } from '@/services/transactionService';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, StyleSheet, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { Alert, KeyboardAvoidingView, Platform, StyleSheet, Text, View, TouchableOpacity, SafeAreaView } from 'react-native';
 
 export default function WithdrawScreen() {
   const { fundId, reason: initialReason } = useLocalSearchParams<{ fundId: string, reason?: string }>();
@@ -67,10 +68,19 @@ export default function WithdrawScreen() {
   };
 
   return (
-    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <View style={styles.card}>
-        <Text style={styles.title}>{title}</Text>
-        <Text style={styles.description}>{description}</Text>
+    <SafeAreaView style={styles.safeArea}>
+      <Stack.Screen options={{ headerShown: false }} />
+      <View style={styles.header}>
+        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+          <Ionicons name="arrow-back" size={24} color={colors.text} />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>{title}</Text>
+        <View style={{ width: 40 }} />
+      </View>
+
+      <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <View style={styles.card}>
+          <Text style={styles.description}>{description}</Text>
 
         <Input
           label="Số tiền (₫)"
@@ -90,12 +100,33 @@ export default function WithdrawScreen() {
 
         <Button label={isOwner ? 'Thanh toán' : 'Gửi yêu cầu'} onPress={handleSubmit} loading={loading} />
       </View>
-    </KeyboardAvoidingView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background, padding: spacing.md },
+  safeArea: { flex: 1, backgroundColor: colors.background },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+    backgroundColor: colors.background,
+  },
+  backBtn: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'flex-start',
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: colors.text,
+  },
+  container: { flex: 1, padding: spacing.md },
   card: {
     flex: 1,
     backgroundColor: colors.surface,
@@ -107,6 +138,5 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     elevation: 3,
   },
-  title: { fontSize: fontSize.xl, fontWeight: '700', color: colors.text, marginBottom: spacing.sm },
   description: { fontSize: fontSize.sm, color: colors.textSecondary, marginBottom: spacing.lg },
 });
