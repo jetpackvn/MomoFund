@@ -215,94 +215,102 @@ export default function FundSettingsScreen() {
         </View>
 
         {/* Nhận tiền quỹ qua mã QR */}
-        <View style={styles.card}>
-          <View style={styles.cardHeaderRow}>
-            <Text style={styles.cardTitle}>Nhận tiền quỹ qua mã QR</Text>
-            <Switch
-              value={receiveQr}
-              onValueChange={setReceiveQr}
-              trackColor={{ false: '#E0E0E0', true: colors.primary }}
-              thumbColor="#FFFFFF"
-            />
+        {isOwner && (
+          <View style={styles.card}>
+            <View style={styles.cardHeaderRow}>
+              <Text style={styles.cardTitle}>Nhận tiền quỹ qua mã QR</Text>
+              <Switch
+                value={receiveQr}
+                onValueChange={setReceiveQr}
+                trackColor={{ false: '#E0E0E0', true: colors.primary }}
+                thumbColor="#FFFFFF"
+              />
+            </View>
+            <Text style={styles.cardDesc}>
+              Cho phép nhận tiền từ cả MoMo và tài khoản ngân hàng
+            </Text>
           </View>
-          <Text style={styles.cardDesc}>
-            Cho phép nhận tiền từ cả MoMo và tài khoản ngân hàng
-          </Text>
-        </View>
+        )}
 
         {/* Chọn loại quỹ */}
-        <View style={styles.card}>
-          <View style={styles.cardHeaderRow}>
-            <Text style={styles.cardTitle}>Chọn loại quỹ</Text>
-            <TouchableOpacity>
-              <Text style={styles.linkText}>Tìm hiểu thêm <Ionicons name="chevron-forward" size={12} /></Text>
-            </TouchableOpacity>
-          </View>
-          <Text style={styles.cardDesc}>
-            Thay đổi loại quỹ theo nhu cầu sử dụng bất cứ lúc nào
-          </Text>
+        {isOwner && (
+          <View style={styles.card}>
+            <View style={styles.cardHeaderRow}>
+              <Text style={styles.cardTitle}>Chọn loại quỹ</Text>
+              <TouchableOpacity>
+                <Text style={styles.linkText}>Tìm hiểu thêm <Ionicons name="chevron-forward" size={12} /></Text>
+              </TouchableOpacity>
+            </View>
+            <Text style={styles.cardDesc}>
+              Thay đổi loại quỹ theo nhu cầu sử dụng bất cứ lúc nào
+            </Text>
 
-          <View style={styles.fundTypeOptions}>
-            <TouchableOpacity 
-              style={[styles.typeOption, fundType === 'saving' && styles.typeOptionActive]}
-              onPress={() => setFundType('saving')}
-            >
-              <View style={[styles.typeIconBox, { backgroundColor: '#FFF3E0' }]}>
-                <Ionicons name="wallet" size={24} color="#FF9800" />
-              </View>
-              <View style={styles.typeInfo}>
-                <Text style={styles.typeTitle}>Tích lũy</Text>
-                <Text style={styles.typeDesc}>Để số dư quỹ sinh lời mỗi ngày tới 4%/năm.</Text>
-              </View>
-              <View style={[styles.radioOuter, fundType === 'saving' && styles.radioOuterActive]}>
-                {fundType === 'saving' && <View style={styles.radioInner} />}
-              </View>
-            </TouchableOpacity>
+            <View style={styles.fundTypeOptions}>
+              <TouchableOpacity 
+                style={[styles.typeOption, fundType === 'saving' && styles.typeOptionActive]}
+                onPress={() => setFundType('saving')}
+              >
+                <View style={[styles.typeIconBox, { backgroundColor: '#FFF3E0' }]}>
+                  <Ionicons name="wallet" size={24} color="#FF9800" />
+                </View>
+                <View style={styles.typeInfo}>
+                  <Text style={styles.typeTitle}>Tích lũy</Text>
+                  <Text style={styles.typeDesc}>Để số dư quỹ sinh lời mỗi ngày tới 4%/năm.</Text>
+                </View>
+                <View style={[styles.radioOuter, fundType === 'saving' && styles.radioOuterActive]}>
+                  {fundType === 'saving' && <View style={styles.radioInner} />}
+                </View>
+              </TouchableOpacity>
 
-            <TouchableOpacity 
-              style={[styles.typeOption, fundType === 'spending' && styles.typeOptionActive, { borderBottomWidth: 0 }]}
-              onPress={() => setFundType('spending')}
-            >
-              <View style={[styles.typeIconBox, { backgroundColor: '#E8F5E9' }]}>
-                <Ionicons name="earth" size={24} color="#4CAF50" />
-              </View>
-              <View style={styles.typeInfo}>
-                <Text style={styles.typeTitle}>Chi tiêu chung</Text>
-                <Text style={styles.typeDesc}>Ủy quyền cho người yêu, bạn bè hoặc gia đình để chi tiêu trực tiếp từ quỹ.</Text>
-              </View>
-              <View style={[styles.radioOuter, fundType === 'spending' && styles.radioOuterActive]}>
-                {fundType === 'spending' && <View style={styles.radioInner} />}
-              </View>
-            </TouchableOpacity>
-          </View>
+              <TouchableOpacity 
+                style={[styles.typeOption, fundType === 'spending' && styles.typeOptionActive, { borderBottomWidth: 0 }]}
+                onPress={() => setFundType('spending')}
+              >
+                <View style={[styles.typeIconBox, { backgroundColor: '#E8F5E9' }]}>
+                  <Ionicons name="earth" size={24} color="#4CAF50" />
+                </View>
+                <View style={styles.typeInfo}>
+                  <Text style={styles.typeTitle}>Chi tiêu chung</Text>
+                  <Text style={styles.typeDesc}>Ủy quyền cho người yêu, bạn bè hoặc gia đình để chi tiêu trực tiếp từ quỹ.</Text>
+                </View>
+                <View style={[styles.radioOuter, fundType === 'spending' && styles.radioOuterActive]}>
+                  {fundType === 'spending' && <View style={styles.radioInner} />}
+                </View>
+              </TouchableOpacity>
+            </View>
 
-          <View style={styles.lockMessage}>
-            <Ionicons name="lock-closed-outline" size={20} color={colors.textSecondary} style={{ marginRight: 12 }} />
-            <Text style={styles.lockMessageText}>Tạo quỹ để thiết lập loại quỹ theo đúng nhu cầu.</Text>
+            <View style={styles.lockMessage}>
+              <Ionicons name="lock-closed-outline" size={20} color={colors.textSecondary} style={{ marginRight: 12 }} />
+              <Text style={styles.lockMessageText}>Tạo quỹ để thiết lập loại quỹ theo đúng nhu cầu.</Text>
+            </View>
           </View>
-        </View>
+        )}
 
         {/* Thông tin quỹ */}
-        <TouchableOpacity style={styles.card} onPress={openEditModal}>
-          <View style={styles.cardHeaderRow}>
-            <View>
-              <Text style={styles.cardTitle}>Thông tin quỹ</Text>
-              <Text style={[styles.cardDesc, { marginTop: 4, marginBottom: 0 }]}>Cập nhật tên, mô tả quỹ</Text>
+        {isOwner && (
+          <TouchableOpacity style={styles.card} onPress={openEditModal}>
+            <View style={styles.cardHeaderRow}>
+              <View>
+                <Text style={styles.cardTitle}>Thông tin quỹ</Text>
+                <Text style={[styles.cardDesc, { marginTop: 4, marginBottom: 0 }]}>Cập nhật tên, mô tả quỹ</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color={colors.text} />
             </View>
-            <Ionicons name="chevron-forward" size={20} color={colors.text} />
-          </View>
-        </TouchableOpacity>
+          </TouchableOpacity>
+        )}
 
         {/* Đặt mục tiêu */}
-        <TouchableOpacity style={styles.card} onPress={() => router.push(`/fund/${id}/goal`)}>
-          <View style={styles.cardHeaderRow}>
-            <View>
-              <Text style={styles.cardTitle}>Đặt mục tiêu</Text>
-              <Text style={[styles.cardDesc, { marginTop: 4, marginBottom: 0 }]}>Tạo mục tiêu và hiện thực ước mơ nhé</Text>
+        {isOwner && (
+          <TouchableOpacity style={styles.card} onPress={() => router.push(`/fund/${id}/goal`)}>
+            <View style={styles.cardHeaderRow}>
+              <View>
+                <Text style={styles.cardTitle}>Đặt mục tiêu</Text>
+                <Text style={[styles.cardDesc, { marginTop: 4, marginBottom: 0 }]}>Tạo mục tiêu và hiện thực ước mơ nhé</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color={colors.text} />
             </View>
-            <Ionicons name="chevron-forward" size={20} color={colors.text} />
-          </View>
-        </TouchableOpacity>
+          </TouchableOpacity>
+        )}
 
         {/* Hướng dẫn sử dụng */}
         <TouchableOpacity style={styles.cardRow} onPress={() => router.push(`/fund/${id}/guide`)}>
